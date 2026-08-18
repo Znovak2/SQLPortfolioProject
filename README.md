@@ -1,78 +1,55 @@
 # Bicycle Shop Analysis
 
-A SQL Server portfolio project using the **BikeStores** sample database to document and demonstrate my progression from core T-SQL concepts through database development, analytical querying, performance work, and business-oriented analysis.
+A SQL Server portfolio project built on the BikeStores sample database. It is a growing collection of focused `.sql` files that demonstrate how I use different T-SQL features, from foundational syntax through increasingly advanced querying and analysis.
 
-The repository is designed so that a reviewer can either:
+The repository supports two review paths:
 
-1. inspect the SQL and project history directly on GitHub,
-2. reproduce the project locally with SQL Server and Visual Studio Code, or
-3. give the included [`AGENTS_README.md`](./AGENTS_README.md) to an agentic coding assistant and have it prepare the project for inspection.
-
-> **Using a coding agent?**  
-> See [`AGENTS_README.md`](./AGENTS_README.md). It contains machine-oriented setup instructions, validation checks, safety constraints, and a ready-to-copy agent prompt.
+1. Browse the SQL files and project history directly on GitHub.
+2. Recreate the BikeStores database locally and run the queries against live sample data.
 
 ## Project Status
 
-**Current phase:** Core SQL learning and analysis.
+The current phase focuses on foundational querying. The repository contains working examples for `SELECT`, filtering, grouping, aggregation, `HAVING`, and `ORDER BY`. Each concept is kept in a focused file so the code is easy to review and the progression is visible over time.
 
-The database environment and source data are established. Current work is focused on writing, organizing, and documenting SQL queries while progressively adding more advanced SQL concepts.
+## Current Topics
 
-## What This Project Is Intended to Demonstrate
+- Selecting and filtering data
+- Sorting and grouping results
+- Aggregate functions and `HAVING`
+- Clear, commented examples of individual SQL methods
+- SQL Database Project organization and builds
+- Reproducible sample-database setup
+- Git-based project history
 
-The goal is not only to produce a collection of SQL queries. The repository is intended to show how I approach a SQL project as a complete development workflow.
-
-Areas covered or planned include:
-
-- SELECT statements and filtering
-- Sorting and grouping
-- Joins
-- Aggregations
-- Subqueries
-- Common table expressions
-- Window functions
-- Views
-- Stored procedures
-- Functions
-- Data validation
-- Relational database structure
-- Query organization
-- Indexing and query performance
-- SQL Database Projects
-- Git-based source control
-- Reproducible project setup
-- Business-oriented analysis and interpretation
+Planned showcase files include joins, subqueries, common table expressions, window functions, views, stored procedures, functions, data validation, indexing, and query-performance techniques. More involved business analysis can be added later when it goes beyond demonstrating a single SQL concept.
 
 ## Technology
 
-- **Microsoft SQL Server 2025 Express**
-- **T-SQL**
-- **Visual Studio Code**
-- **SQL Server (mssql) extension for VS Code**
-- **Microsoft SQL Database Projects**
-- **Microsoft.Build.Sql**
-- **Git / GitHub**
+- Microsoft SQL Server 2025 Express
+- T-SQL
+- Visual Studio Code
+- SQL Server (`mssql`) extension for Visual Studio Code
+- SQL Database Projects extension for Visual Studio Code
+- Microsoft.Build.Sql 2.2.0
+- Git and GitHub
 
-My development SQL Server is self-hosted on an Ubuntu Server VM in my homelab using Docker. Reviewers do **not** need to reproduce my homelab infrastructure. The manual setup below uses a normal local SQL Server installation.
+The SQL project targets the SQL Server 2025 (`Sql170`) schema provider. My development instance runs in Docker on an Ubuntu Server VM, but any compatible SQL Server instance can be used to review the project.
 
 ## Data Source
 
-This project uses the **BikeStores** sample database provided by SQLServerTutorial.net:
+This project uses the [BikeStores sample database](https://www.sqlservertutorial.net/getting-started/sql-server-sample-database/) from SQLServerTutorial.net. The supplied setup scripts are retained in [`source-data/`](./source-data/); they are upstream sample data, not original analytical work.
 
-https://www.sqlservertutorial.net/getting-started/sql-server-sample-database/
-
-The original sample scripts are retained under [`source-data/`](./source-data/) so the database can be recreated.
-
-The sample database uses two primary schemas:
+BikeStores uses two application schemas:
 
 - `production`
 - `sales`
 
-## Current Repository Structure
+## Repository Structure
 
 ```text
-sql-portfolio/
+bicycle-shop-analysis/
 ├── .vscode/
-├── Bicycle Shop Analysis.sqlproj
+│   └── tasks.json
 ├── database/
 │   └── queries/
 │       ├── ORDER_BY.sql
@@ -82,175 +59,62 @@ sql-portfolio/
 │   ├── BikeStores Sample Database - drop all objects.sql
 │   └── BikeStores Sample Database - load data.sql
 ├── AGENTS_README.md
+├── Bicycle Shop Analysis.sqlproj
 └── README.md
 ```
 
-### `Bicycle Shop Analysis.sqlproj`
+### SQL showcase files
 
-The SQL Database Project definition.
+- [`SELECT.sql`](./database/queries/SELECT.sql) demonstrates projection, filtering, sorting, grouping, aggregation, and `HAVING`.
+- [`ORDER_BY.sql`](./database/queries/ORDER_BY.sql) demonstrates ascending and descending sorts, multiple sort keys, ordinal positions, nonprojected columns, and expressions.
 
-It represents the source-controlled database project separately from the live `BikeStores` database. The project can be built, inspected, compared, and later used as part of a schema deployment workflow.
+New concept demonstrations belong in `database/queries/`. The current structure intentionally keeps these examples together; a separate analysis area is only needed once the repository contains longer, multi-step investigations organized around business questions rather than individual SQL features.
 
-### `database/queries/`
+### SQL project
 
-Contains my SQL learning and analysis work.
+[`Bicycle Shop Analysis.sqlproj`](./Bicycle%20Shop%20Analysis.sqlproj) is an SDK-style Microsoft.Build.Sql project. A build validates the project and produces a DACPAC; it does not create or populate the live `BikeStores` database.
 
-Current query files include:
+### Setup runbook
 
-- [`SELECT.sql`](./database/queries/SELECT.sql)
-- [`ORDER_BY.sql`](./database/queries/ORDER_BY.sql)
+[`AGENTS_README.md`](./AGENTS_README.md) contains the detailed environment, command-line, Docker, validation, safety, and cleanup procedures used to reproduce the project consistently.
 
-This directory will continue to grow as additional SQL concepts and business questions are covered.
+## Review the SQL
 
-### `source-data/`
+### Browse on GitHub
 
-Contains the original scripts required to recreate the BikeStores sample database.
+The SQL, comments, project configuration, sample setup scripts, and Git history can all be inspected without installing SQL Server. The repository can also be browsed through [VS Code for the Web](https://vscode.dev/github/Znovak2/sql-portfolio).
 
-These files are source data and setup material. They are not presented as my original analytical work.
+Start with the files under [`database/queries/`](./database/queries/). Executing them is optional and requires a populated `BikeStores` database.
 
----
+### Run the queries live
 
-# Review the Project Without Installing Anything
+Follow the local setup below to create `BikeStores`, load the sample data, and execute the same showcase files against SQL Server. For a command-line or Docker-based setup, use the more detailed [`AGENTS_README.md`](./AGENTS_README.md) runbook.
 
-No local SQL Server is required to inspect the repository.
+## Local Setup
 
-A reviewer can browse:
-
-- SQL queries
-- SQL comments and reasoning
-- Database project configuration
-- Source data scripts
-- Git history
-- README changes
-- Project progression over time
-
-The repository can also be opened in VS Code for the Web:
-
-https://vscode.dev/github/Znovak2/sql-portfolio
-
-This provides a VS Code-style browsing experience without requiring a local clone.
-
----
-
-# AI-Assisted Setup
-
-If you would like an agentic coding assistant to prepare the project for you, or you are an agent reading this repository, use:
-
-[`AGENTS_README.md`](./AGENTS_README.md)
-
-That file includes:
-
-- the required end state,
-- environment detection instructions,
-- an automated Docker-based setup path,
-- database creation and loading instructions,
-- project build instructions,
-- verification queries,
-- safety rules,
-- cleanup guidance, and
-- a complete prompt that can be copied into a coding agent.
-
----
-
-# Manual Local Setup
-
-The following instructions are intended for someone who wants to reproduce the database and execute the queries locally.
-
-## 1. Install Microsoft SQL Server 2025 Express
-
-Download SQL Server from Microsoft:
-
-https://www.microsoft.com/en-us/sql-server/sql-server-downloads
-
-Install **SQL Server 2025 Express**.
-
-During installation, note:
-
-- the SQL Server instance name,
-- the authentication method you configured, and
-- any SQL login credentials you created.
-
-A common SQL Server Express instance name is:
-
-```text
-localhost\SQLEXPRESS
-```
-
-Your instance name may be different.
-
-## 2. Install Visual Studio Code
-
-Download Visual Studio Code:
-
-https://code.visualstudio.com/download
-
-## 3. Install the Microsoft SQL Server Extension
-
-In Visual Studio Code, open **Extensions** and install:
-
-**SQL Server (mssql)** by Microsoft
-
-Extension page:
-
-https://marketplace.visualstudio.com/items?itemName=ms-mssql.mssql
-
-The Microsoft SQL tooling provides SQL Server connections, query execution, and Database Projects functionality.
-
-If Visual Studio Code prompts for an additional prerequisite such as the .NET SDK for SQL Database Project build functionality, follow the installation prompt.
-
-## 4. Download the Repository
-
-### Option A: Download ZIP
-
-This is the simplest option if you do not normally use Git.
-
-1. Open the repository on GitHub.
-2. Click **Code**.
-3. Select **Download ZIP**.
-4. Extract the ZIP file.
-5. Open the extracted repository folder in Visual Studio Code.
-
-### Option B: Clone with Git
+### 1. Clone the repository
 
 ```bash
-git clone https://github.com/Znovak2/sql-portfolio.git
-cd sql-portfolio
+git clone https://github.com/Znovak2/sql-portfolio.git bicycle-shop-analysis
+cd bicycle-shop-analysis
 ```
 
-Then open the repository in Visual Studio Code.
+All commands below assume `bicycle-shop-analysis/` is the current directory.
 
-## 5. Open the SQL Database Project
+### 2. Install the tools
 
-In Visual Studio Code:
+Install or make available:
 
-1. Open the **Database Projects** view from the Activity Bar.
-2. Choose the option to open an existing project.
-3. Navigate to the repository root.
-4. Select:
+- a compatible SQL Server instance,
+- Visual Studio Code,
+- the Microsoft SQL Server (`mssql`) extension, and
+- the SQL Database Projects extension.
 
-```text
-Bicycle Shop Analysis.sqlproj
-```
+For command-line project builds, install a supported .NET SDK. For command-line database setup, install `sqlcmd` or use the copy bundled in the SQL Server container image.
 
-The project should now appear in the Database Projects panel.
+### 3. Create the database
 
-## 6. Connect to SQL Server
-
-Open the **SQL Server** view in Visual Studio Code and create a connection to your local SQL Server instance.
-
-For a typical SQL Server Express installation, the server may be:
-
-```text
-localhost\SQLEXPRESS
-```
-
-Use the authentication method configured during SQL Server installation.
-
-For the initial connection, connect to the `master` database.
-
-## 7. Create the `BikeStores` Database
-
-Open a new query and run:
+Connect to the server and create `BikeStores` only if it does not already exist:
 
 ```sql
 IF DB_ID(N'BikeStores') IS NULL
@@ -260,65 +124,25 @@ END;
 GO
 ```
 
-Verify:
+### 4. Create the objects and load the data
 
-```sql
-SELECT name
-FROM sys.databases
-ORDER BY name;
-GO
-```
+Connect explicitly to `BikeStores`, then run these scripts in order:
 
-`BikeStores` should appear in the results.
+1. `source-data/BikeStores Sample Database - create objects.sql`
+2. `source-data/BikeStores Sample Database - load data.sql`
 
-## 8. Switch the Connection to `BikeStores`
-
-Before running any setup scripts, verify the active database:
+The scripts do not create or select the database, so confirm the connection context before running them:
 
 ```sql
 SELECT DB_NAME() AS CurrentDatabase;
 GO
 ```
 
-Expected result:
+The expected value is `BikeStores`.
 
-```text
-BikeStores
-```
+Do not run `BikeStores Sample Database - drop all objects.sql` during normal setup. It is destructive and is intended only for an explicit reset.
 
-If the result is not `BikeStores`, change the active database before continuing.
-
-## 9. Create the BikeStores Database Objects
-
-Open:
-
-```text
-source-data/BikeStores Sample Database - create objects.sql
-```
-
-Confirm that the active connection is using `BikeStores`.
-
-Run the entire script.
-
-This creates the `production` and `sales` schemas and the sample database tables and relationships.
-
-## 10. Load the BikeStores Sample Data
-
-Open:
-
-```text
-source-data/BikeStores Sample Database - load data.sql
-```
-
-Confirm again that the active connection is using `BikeStores`.
-
-Run the entire script.
-
-This populates the sample tables with the data used by the project.
-
-## 11. Verify the Database
-
-Run:
+### 5. Validate the sample database
 
 ```sql
 SELECT
@@ -326,228 +150,49 @@ SELECT
     TABLE_NAME
 FROM INFORMATION_SCHEMA.TABLES
 WHERE TABLE_TYPE = 'BASE TABLE'
+  AND TABLE_SCHEMA IN (N'production', N'sales')
 ORDER BY
     TABLE_SCHEMA,
     TABLE_NAME;
 GO
-```
 
-The BikeStores sample database should contain tables in the `production` and `sales` schemas.
-
-Verify that data is present:
-
-```sql
-SELECT TOP (10) *
+SELECT COUNT(*) AS ProductCount
 FROM production.products;
 GO
-```
 
-and:
-
-```sql
 SELECT COUNT(*) AS OrderCount
 FROM sales.orders;
 GO
 ```
 
-If these queries return data, the database is ready.
+The sample contains nine base tables, and both row counts should be greater than zero.
 
----
+### 6. Run the analysis queries
 
-# Running My SQL Work
-
-The current SQL work is under:
-
-```text
-database/queries/
-```
-
-For example:
-
-```text
-database/queries/SELECT.sql
-database/queries/ORDER_BY.sql
-```
-
-To inspect a query:
-
-1. Open the `.sql` file in Visual Studio Code.
-2. Confirm that the active SQL connection is using `BikeStores`.
-3. Read the comments describing the purpose of each example.
-4. Run individual statements or the complete file.
-5. Review the results.
-
-A quick database-context check can be run at any time:
+Open a file under `database/queries/`, connect it to `BikeStores`, and run either individual statements or the complete file. Verify the active database whenever the connection is uncertain:
 
 ```sql
 SELECT DB_NAME() AS CurrentDatabase;
 GO
 ```
 
----
+### 7. Build the SQL project
 
-# SQL Server View vs. Database Projects View
-
-These two Visual Studio Code views serve different purposes.
-
-## SQL Server View
-
-The SQL Server view connects to the **live SQL Server instance**.
-
-Use it to:
-
-- browse `BikeStores`,
-- inspect live objects,
-- execute queries,
-- inspect table data, and
-- test SQL.
-
-## Database Projects View
-
-The Database Projects view represents the **source-controlled database project**.
-
-Use it to:
-
-- inspect database object definitions,
-- track schema changes,
-- build the `.sqlproj`,
-- validate project structure,
-- compare project schema with a live database, and
-- produce deployment artifacts such as a DACPAC.
-
-Building the project does **not** automatically change the live `BikeStores` database.
-
----
-
-# Building the SQL Database Project
-
-If the .NET SDK is available, the project can be built from the repository root:
+From the project root:
 
 ```bash
 dotnet build "Bicycle Shop Analysis.sqlproj"
 ```
 
-The project currently uses `Microsoft.Build.Sql` and targets the SQL Server 2025 schema provider.
+A successful build validates the SQL project and creates build output under `bin/` and `obj/`. Those generated directories should not be committed.
 
-A successful build validates the SQL Database Project and produces build artifacts. It does not populate the sample data.
+## Safety Notes
 
----
+- Do not run the drop-all-objects script unless a database reset is intentional.
+- Do not commit passwords, connection strings containing secrets, backups, or generated database files.
+- Always pass or verify the `BikeStores` database context before running setup or analysis scripts.
+- Building the SQL project is separate from publishing it to a database.
 
-# Resetting the Sample Objects
+## Attribution
 
-The repository contains:
-
-```text
-source-data/BikeStores Sample Database - drop all objects.sql
-```
-
-This script removes the BikeStores sample objects.
-
-Use it only if you intentionally want to reset the database before recreating the objects and loading the data again.
-
-For normal review, no reset is required.
-
----
-
-# Removing the Local Database
-
-No cleanup is required after reviewing the project.
-
-If you intentionally want to delete the local `BikeStores` database:
-
-```sql
-USE master;
-GO
-
-ALTER DATABASE BikeStores
-SET SINGLE_USER
-WITH ROLLBACK IMMEDIATE;
-GO
-
-DROP DATABASE BikeStores;
-GO
-```
-
-This removes the database only. It does not uninstall SQL Server, Visual Studio Code, or the repository.
-
----
-
-# Troubleshooting
-
-## `BikeStores` does not appear
-
-Check the available databases:
-
-```sql
-SELECT name
-FROM sys.databases
-ORDER BY name;
-GO
-```
-
-If `BikeStores` is missing, create it using the setup step above and refresh the SQL Server view.
-
-## The BikeStores tables do not appear
-
-Verify the current database:
-
-```sql
-SELECT DB_NAME() AS CurrentDatabase;
-GO
-```
-
-If it is not `BikeStores`, switch to the correct database and rerun:
-
-```text
-source-data/BikeStores Sample Database - create objects.sql
-```
-
-## Tables exist but contain no sample data
-
-Check:
-
-```sql
-SELECT COUNT(*) AS ProductCount
-FROM production.products;
-GO
-```
-
-If the tables exist but contain no rows, rerun:
-
-```text
-source-data/BikeStores Sample Database - load data.sql
-```
-
-against `BikeStores`.
-
-## The Database Project builds but the live database does not change
-
-This is expected.
-
-A build validates and compiles the Database Project. Publishing or executing SQL against a live connection is a separate operation.
-
----
-
-# Development Approach
-
-This repository is intentionally being developed incrementally.
-
-Rather than presenting only a finished set of queries, the Git history is intended to show the progression of the project, including:
-
-- concepts being practiced,
-- changes in query complexity,
-- project organization,
-- corrections and refinements, and
-- movement from syntax exercises toward business-oriented analysis.
-
----
-
-# Attribution
-
-The BikeStores sample database and the original sample database scripts are provided by:
-
-**SQLServerTutorial.net**
-
-https://www.sqlservertutorial.net/getting-started/sql-server-sample-database/
-
-The SQL learning work, analytical queries, project organization, documentation, and conclusions in this repository are my own unless otherwise noted.
+The BikeStores sample database and original setup scripts are provided by [SQLServerTutorial.net](https://www.sqlservertutorial.net/getting-started/sql-server-sample-database/). The analytical queries, project organization, documentation, and conclusions in this repository are my own unless otherwise noted.

@@ -1,122 +1,82 @@
-# AGENTS_README.md
+# Repository Setup Runbook
 
 ## Purpose
 
-This file is for agentic coding assistants preparing the **Bicycle Shop Analysis** repository for local inspection.
+This file defines the safe, reproducible setup and validation procedure for the Bicycle Shop Analysis repository. It is written for automated tools and contributors preparing the project for local inspection.
 
-Canonical repository:
+The project root is the repository root:
 
 ```text
-https://github.com/Znovak2/sql-portfolio
+bicycle-shop-analysis/
 ```
 
 Human-oriented project documentation is in [`README.md`](./README.md).
 
-Your task is to prepare a working local environment in which a reviewer can:
+## Required End State
 
-1. access a Microsoft SQL Server instance,
-2. use a database named `BikeStores`,
-3. load the BikeStores schema and sample data,
-4. build `Bicycle Shop Analysis.sqlproj` when the required build tooling is available,
-5. execute the SQL files under `database/queries/`, and
-6. verify that the project is ready for inspection.
+Setup is complete only when all applicable checks below have passed:
 
-Do not change analytical SQL or project documentation merely to make setup appear successful.
-
----
-
-# Expected Final State
-
-A successful setup has all of the following:
-
-- The repository is available locally.
 - SQL Server is running and reachable.
 - A database named `BikeStores` exists.
-- The `production` schema exists.
-- The `sales` schema exists.
-- The BikeStores base tables exist.
-- The BikeStores sample data has been loaded.
-- `production.products` contains rows.
-- `sales.orders` contains rows.
-- `Bicycle Shop Analysis.sqlproj` can be opened.
-- The SQL Database Project builds successfully if a compatible .NET SDK is available or can be installed safely.
-- The queries under `database/queries/` can execute against `BikeStores`.
+- The `production` and `sales` schemas exist.
+- The nine BikeStores base tables exist.
+- `production.products` and `sales.orders` contain rows.
+- `Bicycle Shop Analysis.sqlproj` builds when a compatible .NET SDK is available.
+- `database/queries/SELECT.sql` and `database/queries/ORDER_BY.sql` execute against `BikeStores`.
 
-The setup is **not complete** until the validation section has been executed.
+Do not modify analytical SQL or documentation merely to make setup appear successful. Report missing prerequisites and validation failures accurately.
 
----
+## Repository Facts
 
-# Repository Facts
-
-Repository root:
-
-```text
-sql-portfolio/
-```
-
-Important files:
+Important files, relative to the project root:
 
 ```text
 Bicycle Shop Analysis.sqlproj
 
+database/queries/SELECT.sql
+database/queries/ORDER_BY.sql
+
 source-data/BikeStores Sample Database - create objects.sql
 source-data/BikeStores Sample Database - load data.sql
 source-data/BikeStores Sample Database - drop all objects.sql
-
-database/queries/SELECT.sql
-database/queries/ORDER_BY.sql
 ```
 
-Database name:
+Project configuration:
 
 ```text
-BikeStores
+Build SDK:       Microsoft.Build.Sql 2.2.0
+Schema provider: Microsoft.Data.Tools.Schema.Sql.Sql170DatabaseSchemaProvider
+Target platform: SQL Server 2025
+Database name:   BikeStores
+Schemas:         production, sales
 ```
 
-Primary schemas:
+The SQL project and live sample database have different roles. Building the project validates and packages source-controlled SQL; it does not create, populate, or publish the live database.
 
-```text
-production
-sales
-```
+## Safety Rules
 
-The `.sqlproj` uses:
+1. Do not delete an existing database unless the user explicitly requests it.
+2. Do not run the drop-all-objects script during routine setup.
+3. Do not run destructive Docker commands such as `docker compose down -v`, `docker volume rm`, or broad prune commands.
+4. Do not commit passwords, secret-bearing connection strings, backups, database files, or generated build output.
+5. Do not modify upstream files under `source-data/` unless correcting a verified defect.
+6. Do not rewrite analytical SQL to satisfy a stylistic preference or conceal a setup failure.
+7. Do not force-push, reset Git history, delete branches, or publish the project to a remote database without explicit authorization.
+8. Prefer an existing working SQL Server instance over provisioning another one.
+9. If the database is partially initialized or its state is uncertain, report that state before attempting destructive recovery.
+10. If a privileged installation is unavailable or unsafe, report the missing prerequisite instead of bypassing system controls.
 
-```text
-Microsoft.Build.Sql
-SQL Server 2025 / Sql170 schema provider
-```
+## Phase 1: Inspect the Repository and Environment
 
----
-
-# Safety Rules
-
-Follow these rules throughout setup.
-
-1. **Do not delete an existing database unless explicitly requested.**
-2. **Do not execute the drop-all-objects script during normal setup.**
-3. **Do not run destructive Docker commands such as `docker compose down -v`, `docker volume rm`, or broad prune commands.**
-4. **Do not commit passwords, connection strings containing secrets, generated database files, or temporary credentials.**
-5. **Do not modify the source-data scripts unless an actual repository defect is identified and reported.**
-6. **Do not rewrite the analytical SQL merely because a different style is preferred.**
-7. **Do not force-push, reset Git history, or delete branches.**
-8. **Do not publish the project to a remote SQL Server unless the user explicitly requests it.**
-9. **Prefer reusing a working SQL Server instance over creating another one.**
-10. **If a required privileged installation cannot be completed safely, stop and report the missing prerequisite instead of bypassing security controls.**
-
----
-
-# Phase 0: Inspect Before Changing Anything
-
-From the repository root, inspect the environment:
+Run these commands from `bicycle-shop-analysis/`:
 
 ```bash
 pwd
-git status
+git status --short --branch
 git remote -v
 ```
 
-Confirm the required files exist:
+Confirm the required files:
 
 ```bash
 test -f "Bicycle Shop Analysis.sqlproj"
@@ -126,7 +86,7 @@ test -f "database/queries/SELECT.sql"
 test -f "database/queries/ORDER_BY.sql"
 ```
 
-Inspect available tools:
+Inspect available tools without assuming they are installed:
 
 ```bash
 git --version
@@ -136,135 +96,61 @@ docker compose version
 sqlcmd -?
 ```
 
-Some of these commands may fail because the tool is not installed. Record what is available.
+Record unavailable commands. Do not install anything until checking whether an existing SQL Server instance can be reused.
 
-Do not install anything until you have determined whether an existing SQL Server instance can be reused.
+## Phase 2: Find or Provision SQL Server
 
----
+Use the first suitable option:
 
-# Phase 1: Find or Provision SQL Server
+1. an existing local compatible SQL Server instance,
+2. an existing development instance reachable from the current environment,
+3. SQL Server 2025 Express installed on Windows, or
+4. a local SQL Server 2025 container on a supported Docker host.
 
-## Preferred Order
+### Existing SQL Server
 
-Use the first workable option:
+Determine the host, port or instance name, authentication method, and database credentials. Keep credentials outside the repository.
 
-1. an existing local SQL Server 2025 or compatible SQL Server instance,
-2. an existing development SQL Server reachable from the current environment,
-3. a local SQL Server 2025 Express installation on Windows,
-4. a disposable/local SQL Server 2025 Express Docker container on a supported Docker host.
-
-Do not replace a working database server simply because Docker is available.
-
----
-
-# Option A: Existing SQL Server
-
-If SQL Server is already available, determine:
-
-```text
-server/host
-port or instance name
-authentication method
-database credentials, if SQL authentication is used
-```
-
-Do not write credentials into the repository.
-
-Verify connectivity using an available SQL client.
-
-For `sqlcmd` with SQL authentication:
+With SQL authentication:
 
 ```bash
-sqlcmd -S "<server>" -U "<user>" -P "<password>" -Q "SELECT @@VERSION;"
+sqlcmd -S "<server>" -U "<user>" -P "<password>" -b -Q "SELECT @@VERSION;"
 ```
 
-For Windows authentication where supported:
+With Windows authentication where supported:
 
 ```powershell
-sqlcmd -S "<server>" -E -Q "SELECT @@VERSION;"
+sqlcmd -S "<server>" -E -b -Q "SELECT @@VERSION;"
 ```
 
-If connectivity succeeds, continue to **Phase 2**.
+Continue only after connectivity succeeds.
 
----
+### SQL Server 2025 Express on Windows
 
-# Option B: SQL Server 2025 Express on Windows
+Use Microsoft's [SQL Server downloads](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) and supported installer. Record the configured instance name and authentication method; do not assume the instance is `localhost\SQLEXPRESS` without verifying it.
 
-If running on Windows and SQL Server is not installed, use Microsoft's official SQL Server download source:
+### SQL Server 2025 with Docker
 
-```text
-https://www.microsoft.com/en-us/sql-server/sql-server-downloads
-```
+Use this path only when Docker is already available and no suitable server can be reused.
 
-Install SQL Server 2025 Express using the supported Microsoft installer.
-
-After installation:
-
-1. determine the instance name,
-2. determine the configured authentication method,
-3. verify the instance is running, and
-4. verify connectivity.
-
-A common Express instance name is:
-
-```text
-localhost\SQLEXPRESS
-```
-
-Do not assume this name if the installer created a different instance.
-
-Once connectivity works, continue to **Phase 2**.
-
----
-
-# Option C: SQL Server 2025 Express with Docker
-
-This is the preferred automated path when Docker is already available and a local SQL Server is not.
-
-## 1. Create a Strong Temporary Password
-
-The SQL Server `sa` password must satisfy SQL Server password complexity requirements.
-
-Use a strong password containing:
-
-- uppercase characters,
-- lowercase characters,
-- numbers, and
-- symbols.
-
-Store it only in the current shell or another local secret mechanism.
-
-Example shell variable:
+Create a strong temporary `sa` password and keep it in the current shell or another local secret store:
 
 ```bash
 export MSSQL_SA_PASSWORD='<strong-password>'
 ```
 
-Do not commit this value.
-
-## 2. Reuse an Existing Container if Appropriate
-
-Check:
+Check for an existing project container and volume before creating either:
 
 ```bash
 docker ps -a
+docker volume ls
 ```
 
-If a working SQL Server container for this project already exists, reuse it.
-
-Do not create duplicate containers unnecessarily.
-
-## 3. Create Persistent Storage
-
-If no existing project volume is available:
+If neither exists, create persistent storage and start the server:
 
 ```bash
 docker volume create bikestores_sql_data
-```
 
-## 4. Start SQL Server
-
-```bash
 docker run -d \
   --name bikestores-sql \
   --hostname bikestores-sql \
@@ -277,89 +163,68 @@ docker run -d \
   mcr.microsoft.com/mssql/server:2025-latest
 ```
 
-If `bikestores-sql` already exists, do not blindly recreate it.
-
-## 5. Wait for SQL Server
-
-Inspect:
+Inspect startup rather than relying on a fixed sleep:
 
 ```bash
 docker ps
 docker logs --tail=200 bikestores-sql
 ```
 
-The container must remain in a running state.
-
-If it enters a restart loop, inspect the logs before changing anything.
-
-Common causes include:
-
-- invalid `sa` password complexity,
-- insufficient resources,
-- port conflicts, or
-- volume permission/configuration problems.
-
-## 6. Verify the Engine
-
-When the container is healthy:
+Verify the engine from inside the container:
 
 ```bash
 docker exec bikestores-sql bash -lc \
-'/opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -Q "SELECT @@VERSION;"'
+  '/opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -b -Q "SELECT @@VERSION;"'
 ```
 
-If this succeeds, continue.
+If the container does not remain running, inspect its logs for password-complexity failures, port conflicts, resource limits, or storage errors before changing anything.
 
----
+## Phase 3: Create or Inspect `BikeStores`
 
-# Phase 2: Create the `BikeStores` Database
+Do not assume the database is absent. Query the server first:
 
-Do not assume the database is absent.
-
-First check.
-
-## Docker Path
-
-```bash
-docker exec bikestores-sql bash -lc \
-'/opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -Q "SELECT name FROM sys.databases ORDER BY name;"'
+```sql
+SELECT name
+FROM sys.databases
+WHERE name = N'BikeStores';
 ```
 
-If `BikeStores` does not exist:
+Create it only when it does not exist:
 
-```bash
-docker exec bikestores-sql bash -lc \
-'/opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -Q "CREATE DATABASE BikeStores;"'
+```sql
+IF DB_ID(N'BikeStores') IS NULL
+BEGIN
+    CREATE DATABASE BikeStores;
+END;
 ```
 
-## Generic `sqlcmd` Path
-
-SQL authentication example:
+Generic `sqlcmd` example:
 
 ```bash
 sqlcmd \
   -S "<server>" \
   -U "<user>" \
   -P "<password>" \
+  -b \
   -Q "IF DB_ID(N'BikeStores') IS NULL CREATE DATABASE BikeStores;"
 ```
 
-Windows authentication example:
+For Windows authentication, replace `-U` and `-P` with `-E`.
 
-```powershell
-sqlcmd `
-  -S "<server>" `
-  -E `
+Docker example:
+
+```bash
+docker exec bikestores-sql \
+  /opt/mssql-tools18/bin/sqlcmd \
+  -No \
+  -S localhost \
+  -U sa \
+  -P "$MSSQL_SA_PASSWORD" \
+  -b \
   -Q "IF DB_ID(N'BikeStores') IS NULL CREATE DATABASE BikeStores;"
 ```
 
-Do not recreate the database if it already contains the expected BikeStores objects and data.
-
----
-
-# Phase 3: Determine Whether the Sample Database Is Already Loaded
-
-Run the following against `BikeStores`:
+Inspect the database before loading anything:
 
 ```sql
 SELECT DB_NAME() AS CurrentDatabase;
@@ -369,64 +234,26 @@ SELECT
     TABLE_NAME
 FROM INFORMATION_SCHEMA.TABLES
 WHERE TABLE_TYPE = 'BASE TABLE'
-ORDER BY TABLE_SCHEMA, TABLE_NAME;
+  AND TABLE_SCHEMA IN (N'production', N'sales')
+ORDER BY
+    TABLE_SCHEMA,
+    TABLE_NAME;
 
 SELECT
-    CASE
-        WHEN OBJECT_ID(N'production.products', N'U') IS NOT NULL THEN 1
-        ELSE 0
-    END AS ProductsTableExists,
-    CASE
-        WHEN OBJECT_ID(N'sales.orders', N'U') IS NOT NULL THEN 1
-        ELSE 0
-    END AS OrdersTableExists;
+    CASE WHEN OBJECT_ID(N'production.products', N'U') IS NULL THEN 0 ELSE 1 END AS ProductsTableExists,
+    CASE WHEN OBJECT_ID(N'sales.orders', N'U') IS NULL THEN 0 ELSE 1 END AS OrdersTableExists;
 ```
 
-If the expected tables already exist, do **not** rerun the create-objects script.
+- If the expected tables and data already exist, do not reload them.
+- If no expected objects exist, continue to Phase 4.
+- If only some objects exist, stop and report the partial state before considering a reset.
+- If tables exist without data, confirm the load script will not duplicate existing rows before running it.
 
-If the tables exist and contain data, skip directly to **Phase 5**.
+## Phase 4: Load the Schema and Data
 
-If tables exist but data is absent, run only the load-data script if doing so will not create duplicate rows.
+The source scripts create objects and insert rows, but they do not create or select `BikeStores`. Always connect with `-d BikeStores`.
 
-If the database is in an unknown partial state, report it before performing destructive cleanup.
-
----
-
-# Phase 4: Load the BikeStores Schema and Data
-
-## Docker Path
-
-Copy the source scripts into the running container:
-
-```bash
-docker exec bikestores-sql mkdir -p /tmp/bikestores
-docker cp "source-data/BikeStores Sample Database - create objects.sql" \
-  "bikestores-sql:/tmp/bikestores/create-objects.sql"
-docker cp "source-data/BikeStores Sample Database - load data.sql" \
-  "bikestores-sql:/tmp/bikestores/load-data.sql"
-```
-
-Create objects:
-
-```bash
-docker exec bikestores-sql bash -lc \
-'/opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -d BikeStores -b -i "/tmp/bikestores/create-objects.sql"'
-```
-
-Load sample data:
-
-```bash
-docker exec bikestores-sql bash -lc \
-'/opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -d BikeStores -b -i "/tmp/bikestores/load-data.sql"'
-```
-
-The `-b` option is important because it causes `sqlcmd` to return a failure status when the SQL script encounters an error.
-
-## Generic `sqlcmd` Path
-
-Run the scripts explicitly against `BikeStores`.
-
-SQL authentication example:
+### Generic `sqlcmd`
 
 ```bash
 sqlcmd \
@@ -436,11 +263,7 @@ sqlcmd \
   -d BikeStores \
   -b \
   -i "source-data/BikeStores Sample Database - create objects.sql"
-```
 
-Then:
-
-```bash
 sqlcmd \
   -S "<server>" \
   -U "<user>" \
@@ -450,79 +273,54 @@ sqlcmd \
   -i "source-data/BikeStores Sample Database - load data.sql"
 ```
 
-For Windows authentication, replace the username/password arguments with `-E`.
+For Windows authentication, replace `-U` and `-P` with `-E`.
 
-Always pass `-d BikeStores`. The source scripts create objects but do not create or select the `BikeStores` database themselves.
+### Docker
 
----
+Copy the scripts into the container:
 
-# Phase 5: Validate the Database
+```bash
+docker exec bikestores-sql mkdir -p /tmp/bikestores
+docker cp "source-data/BikeStores Sample Database - create objects.sql" \
+  "bikestores-sql:/tmp/bikestores/create-objects.sql"
+docker cp "source-data/BikeStores Sample Database - load data.sql" \
+  "bikestores-sql:/tmp/bikestores/load-data.sql"
+```
 
-Run all of the following against `BikeStores`.
+Run both scripts against `BikeStores`:
 
-## Confirm Database Context
+```bash
+docker exec bikestores-sql bash -lc \
+  '/opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -d BikeStores -b -i "/tmp/bikestores/create-objects.sql"'
+
+docker exec bikestores-sql bash -lc \
+  '/opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -d BikeStores -b -i "/tmp/bikestores/load-data.sql"'
+```
+
+The `-b` flag makes `sqlcmd` return a failure status when SQL execution fails.
+
+## Phase 5: Validate the Database
+
+Run every check against `BikeStores`.
 
 ```sql
 SELECT DB_NAME() AS CurrentDatabase;
-```
 
-Expected:
-
-```text
-BikeStores
-```
-
-## Confirm Schemas
-
-```sql
 SELECT name
 FROM sys.schemas
-WHERE name IN ('production', 'sales')
+WHERE name IN (N'production', N'sales')
 ORDER BY name;
-```
 
-Expected:
-
-```text
-production
-sales
-```
-
-## Confirm Base Tables
-
-```sql
 SELECT
     TABLE_SCHEMA,
     TABLE_NAME
 FROM INFORMATION_SCHEMA.TABLES
 WHERE TABLE_TYPE = 'BASE TABLE'
-  AND TABLE_SCHEMA IN ('production', 'sales')
-ORDER BY TABLE_SCHEMA, TABLE_NAME;
-```
+  AND TABLE_SCHEMA IN (N'production', N'sales')
+ORDER BY
+    TABLE_SCHEMA,
+    TABLE_NAME;
 
-Expected BikeStores tables:
-
-```text
-production.brands
-production.categories
-production.products
-production.stocks
-sales.customers
-sales.order_items
-sales.orders
-sales.staffs
-sales.stores
-```
-
-Expected count:
-
-```text
-9
-```
-
-## Confirm Sample Data
-
-```sql
 SELECT COUNT(*) AS ProductCount
 FROM production.products;
 
@@ -538,74 +336,41 @@ FROM production.products
 ORDER BY product_id;
 ```
 
-`ProductCount` and `OrderCount` must both be greater than zero.
-
-Do not hardcode a row-count expectation unless it has been verified from the source data currently in this repository.
-
----
-
-# Phase 6: Prepare the SQL Database Project
-
-Project file:
+Expected context and structure:
 
 ```text
-Bicycle Shop Analysis.sqlproj
+Database: BikeStores
+Schemas:  production, sales
+
+production.brands
+production.categories
+production.products
+production.stocks
+sales.customers
+sales.order_items
+sales.orders
+sales.staffs
+sales.stores
 ```
 
-Inspect it before modifying anything.
+There should be nine base tables. `ProductCount` and `OrderCount` must both be greater than zero; do not claim exact row counts unless the checked-in source data has been used and the counts were measured.
 
-The current project uses `Microsoft.Build.Sql`.
+## Phase 6: Build the SQL Project
 
-Check .NET:
+Inspect the project before changing it:
 
 ```bash
 dotnet --info
-```
-
-If a compatible .NET SDK is already installed:
-
-```bash
-dotnet restore "Bicycle Shop Analysis.sqlproj"
 dotnet build "Bicycle Shop Analysis.sqlproj"
 ```
 
-If the SDK is missing and installation is safe and permitted, install a supported .NET SDK from Microsoft's official source, then rerun the commands.
+If `dotnet` is unavailable, report the missing prerequisite. If the build fails, capture the exact error and distinguish an environment failure from a project failure before proposing changes.
 
-If the build fails:
+A successful build produces a DACPAC under `bin/`. It does not modify the live `BikeStores` database.
 
-1. capture the exact error,
-2. determine whether the failure is an environment problem or a project problem,
-3. do not make unrelated source changes to force a green build, and
-4. report any project change required to fix the build.
+## Phase 7: Validate the Query Files
 
-A successful build is a validation step. It does not populate or modify the live `BikeStores` database.
-
----
-
-# Phase 7: Inspect and Execute the SQL Work
-
-Current query files:
-
-```text
-database/queries/SELECT.sql
-database/queries/ORDER_BY.sql
-```
-
-Execute them only against `BikeStores`.
-
-Before execution:
-
-```sql
-SELECT DB_NAME() AS CurrentDatabase;
-```
-
-Expected:
-
-```text
-BikeStores
-```
-
-If using `sqlcmd`, an example is:
+Execute both files only against `BikeStores`:
 
 ```bash
 sqlcmd \
@@ -615,11 +380,7 @@ sqlcmd \
   -d BikeStores \
   -b \
   -i "database/queries/SELECT.sql"
-```
 
-Then:
-
-```bash
 sqlcmd \
   -S "<server>" \
   -U "<user>" \
@@ -629,18 +390,16 @@ sqlcmd \
   -i "database/queries/ORDER_BY.sql"
 ```
 
-For Windows authentication, use `-E`.
+For Windows authentication, replace `-U` and `-P` with `-E`. When using Docker, copy the query files into the container and use the same `sqlcmd` pattern documented in Phase 4.
 
-The purpose of this phase is validation and inspection. Do not rewrite the queries unless the user asks for changes.
+The purpose is validation. Do not rewrite a query unless the user asks for a query change or a verified defect requires correction.
 
----
+## Completion Report
 
-# Phase 8: Report Completion
-
-At completion, report all of the following:
+Report each item explicitly:
 
 ```text
-Repository:
+Repository root:
 SQL Server version:
 Connection target:
 Database:
@@ -655,33 +414,20 @@ Files modified during setup:
 Outstanding issues:
 ```
 
-Do not claim setup is complete if any required validation failed.
+Do not report the project as ready if a required validation failed. An unavailable optional tool should be identified precisely rather than presented as a successful check.
 
----
+## Optional Cleanup
 
-# Optional Cleanup
+Do not perform cleanup unless the user explicitly requests it.
 
-Do **not** perform cleanup unless explicitly requested.
-
-## Docker Container
-
-To stop the container without deleting database storage:
+Stop and restart the project container without deleting its volume:
 
 ```bash
 docker stop bikestores-sql
-```
-
-To start it again:
-
-```bash
 docker start bikestores-sql
 ```
 
-Do not delete `bikestores_sql_data` unless the user explicitly requests removal of the database data.
-
-## SQL Database
-
-If the user explicitly requests complete database removal:
+If the user explicitly requests deletion of the local database:
 
 ```sql
 USE master;
@@ -693,65 +439,4 @@ WITH ROLLBACK IMMEDIATE;
 DROP DATABASE BikeStores;
 ```
 
-Do not run this during normal inspection.
-
----
-
-# Ready-to-Copy Coding Agent Prompt
-
-Copy the following into an agentic coding assistant from the repository root:
-
-```text
-Prepare this repository for local inspection by following AGENTS_README.md as the source of truth.
-
-Goal:
-Produce a working local Bicycle Shop Analysis environment backed by the BikeStores SQL Server database.
-
-Rules:
-- Inspect the current environment before installing or changing anything.
-- Reuse an existing working SQL Server instance when possible.
-- If no SQL Server is available and Docker is available, use the Docker setup documented in AGENTS_README.md.
-- Do not delete databases, Docker volumes, files, branches, or user configuration.
-- Do not run the drop-all-objects script unless I explicitly request a reset.
-- Do not commit credentials or generated database files.
-- Do not rewrite analytical SQL merely to make setup pass.
-- Do not publish schema changes to a remote database.
-- Keep all setup changes minimal and report every repository file you modify.
-
-Required work:
-1. Inspect the repository and available tooling.
-2. Ensure a working SQL Server instance is available.
-3. Ensure a database named BikeStores exists.
-4. Determine whether the BikeStores schema and data are already loaded.
-5. If needed, run the source-data create-objects script against BikeStores.
-6. If needed, run the source-data load-data script against BikeStores.
-7. Run every validation query documented in AGENTS_README.md.
-8. Build "Bicycle Shop Analysis.sqlproj" if the required .NET tooling is available or can be installed safely.
-9. Validate the SQL files under database/queries against BikeStores.
-10. Do not perform cleanup after validation.
-
-Before finishing, report:
-- SQL Server version
-- connection target
-- database name
-- schemas discovered
-- base table count
-- product row count
-- order row count
-- SQL project build result
-- query validation result
-- files modified
-- anything that could not be completed
-
-Do not say the project is ready until the validation checks in AGENTS_README.md pass.
-```
-
----
-
-# Notes for Agents
-
-This repository is a learning and portfolio project.
-
-Preserve evidence of the author's work.
-
-Your role during setup is to make the existing project inspectable and reproducible, not to replace the author's SQL with generated alternatives.
+Deleting the database is irreversible unless a backup exists. Never delete `bikestores_sql_data` as part of routine review or cleanup.

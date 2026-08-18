@@ -1,0 +1,21 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    container_name: sql-portfolio-db
+    hostname: sql-portfolio-db
+
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Express"
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD}"
+
+    ports:
+      - "127.0.0.1:1433:1433"
+
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:

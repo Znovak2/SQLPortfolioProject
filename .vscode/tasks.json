@@ -1,0 +1,21 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "sqlproj: Build Bicycle Shop Analysis",
+			"type": "process",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"/home/sqlserver/projects/Bicycle Shop Analysis/Bicycle Shop Analysis.sqlproj"
+			],
+			"problemMatcher": "$sqlproj-problem-matcher",
+			"isBackground": true,
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"detail": "Builds the Bicycle Shop Analysis SQL project"
+		}
+	]
+}

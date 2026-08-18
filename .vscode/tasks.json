@@ -1,21 +1,154 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"label": "sqlproj: Build Bicycle Shop Analysis",
-			"type": "process",
-			"command": "dotnet",
-			"args": [
-				"build",
-				"/home/sqlserver/projects/Bicycle Shop Analysis/Bicycle Shop Analysis.sqlproj"
-			],
-			"problemMatcher": "$sqlproj-problem-matcher",
-			"isBackground": true,
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
-			"detail": "Builds the Bicycle Shop Analysis SQL project"
-		}
-	]
+    "version": "2.0.0",
+
+    "tasks": [
+        {
+            "label": "SQL Project: Build",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/Bicycle Shop Analysis.sqlproj"
+            ],
+            "problemMatcher": "$sqlproj-problem-matcher",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            },
+            "detail": "Builds the Bicycle Shop Analysis SQL project."
+        },
+
+        {
+            "label": "Environment: Check prerequisites",
+            "type": "shell",
+            "command": "git --version; dotnet --version; sqlcmd -?",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            },
+            "detail": "Checks Git, .NET, and sqlcmd."
+        },
+
+        {
+            "label": "SQL Server: Status",
+            "type": "shell",
+
+            "linux": {
+                "command": "systemctl --no-pager --full status mssql-server"
+            },
+
+            "windows": {
+                "command": "powershell -NoProfile -Command \"Get-Service -Name 'MSSQL*' | Format-Table -AutoSize\""
+            },
+
+            "command": "echo 'Native SQL Server service status is not available on this OS.'",
+
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            },
+
+            "detail": "Shows the status of a locally installed SQL Server service."
+        },
+
+        {
+            "label": "BikeStores: Validate database",
+            "type": "process",
+            "command": "sqlcmd",
+
+            "args": [
+                "-S",
+                "${input:sqlServer}",
+                "-U",
+                "${input:sqlUser}",
+                "-d",
+                "BikeStores",
+                "-b",
+                "-Q",
+                "SET NOCOUNT ON; SELECT DB_NAME() AS CurrentDatabase; SELECT COUNT(*) AS BaseTableCount FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_SCHEMA IN ('production', 'sales'); SELECT COUNT(*) AS ProductCount FROM production.products; SELECT COUNT(*) AS OrderCount FROM sales.orders;"
+            ],
+
+            "options": {
+                "env": {
+                    "SQLCMDPASSWORD": "${input:sqlPassword}"
+                }
+            },
+
+            "problemMatcher": [],
+
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            },
+
+            "detail": "Validates the BikeStores database without changing data."
+        },
+
+        {
+            "label": "Queries: Run portfolio queries",
+            "type": "process",
+            "command": "sqlcmd",
+
+            "args": [
+                "-S",
+                "${input:sqlServer}",
+                "-U",
+                "${input:sqlUser}",
+                "-d",
+                "BikeStores",
+                "-b",
+                "-i",
+                "${workspaceFolder}/database/queries/SELECT.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/ORDER_BY.sql"
+            ],
+
+            "options": {
+                "env": {
+                    "SQLCMDPASSWORD": "${input:sqlPassword}"
+                }
+            },
+
+            "problemMatcher": [],
+
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            },
+
+            "detail": "Runs the checked-in portfolio queries against BikeStores."
+        }
+    ],
+
+    "inputs": [
+        {
+            "id": "sqlServer",
+            "type": "promptString",
+            "description": "SQL Server host or instance",
+            "default": "localhost"
+        },
+        {
+            "id": "sqlUser",
+            "type": "promptString",
+            "description": "SQL Server username",
+            "default": "sa"
+        },
+        {
+            "id": "sqlPassword",
+            "type": "promptString",
+            "description": "SQL Server password",
+            "password": true
+        }
+    ]
 }

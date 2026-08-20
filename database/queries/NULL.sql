@@ -1,4 +1,4 @@
--- The following NULL comparison are "UNKOWN"
+-- The following NULL comparison are "UNKNOWN"
 -- NULL = 0
 -- NULL <> 0
 -- NULL > 0

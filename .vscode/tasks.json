@@ -74,7 +74,7 @@
                 "BikeStores",
                 "-b",
                 "-Q",
-                "SET NOCOUNT ON; SELECT DB_NAME() AS CurrentDatabase; SELECT COUNT(*) AS BaseTableCount FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_SCHEMA IN ('production', 'sales'); SELECT COUNT(*) AS ProductCount FROM production.products; SELECT COUNT(*) AS OrderCount FROM sales.orders;"
+                "SET NOCOUNT ON; SELECT DB_NAME() AS CurrentDatabase; SELECT COUNT(*) AS BaseTableCount FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_SCHEMA IN ('hr', 'production', 'sales'); SELECT COUNT(*) AS ProductCount FROM production.products; SELECT COUNT(*) AS OrderCount FROM sales.orders; SELECT COUNT(*) AS CandidateCount FROM hr.candidates; SELECT COUNT(*) AS EmployeeCount FROM hr.employees;"
             ],
 
             "options": {
@@ -91,7 +91,7 @@
                 "clear": true
             },
 
-            "detail": "Validates the BikeStores database without changing data."
+            "detail": "Validates the BikeStores and HR demonstration tables without changing data."
         },
 
         {
@@ -108,9 +108,33 @@
                 "BikeStores",
                 "-b",
                 "-i",
+                "${workspaceFolder}/database/queries/ALIAS.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/AND.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/BETWEEN.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/IN_SUBQUERY.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/JOIN.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/LIKE.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/NULL.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/OFFSET_FETCH.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/OR.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/ORDER_BY.sql",
+                "-i",
                 "${workspaceFolder}/database/queries/SELECT.sql",
                 "-i",
-                "${workspaceFolder}/database/queries/ORDER_BY.sql"
+                "${workspaceFolder}/database/queries/SELECT_DISTINCT.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/SELECT_TOP.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/WHERE.sql"
             ],
 
             "options": {
@@ -127,7 +151,7 @@
                 "clear": true
             },
 
-            "detail": "Runs the checked-in portfolio queries against BikeStores."
+            "detail": "Runs all checked-in portfolio queries against BikeStores."
         }
     ],
 

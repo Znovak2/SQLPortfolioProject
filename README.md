@@ -9,19 +9,21 @@ The repository supports two review paths:
 
 ## Project Status
 
-The current phase focuses on foundational querying. The repository contains working examples for `SELECT`, filtering, grouping, aggregation, `HAVING`, and `ORDER BY`. Each concept is kept in a focused file so the code is easy to review and the progression is visible over time.
+The current phase focuses on foundational querying. The repository contains working examples for `SELECT`, filtering, sorting, grouping, aggregation, subqueries, aliases, and an introductory `INNER JOIN`. Each concept is kept in a focused file so the code is easy to review and the progression is visible over time.
 
 ## Current Topics
 
 - Selecting and filtering data
 - Sorting and grouping results
 - Aggregate functions and `HAVING`
+- Aliases, range predicates, pattern matching, and subqueries
+- An `INNER JOIN` example backed by deterministic HR demonstration data
 - Clear, commented examples of individual SQL methods
 - SQL Database Project organization and builds
 - Reproducible sample-database setup
 - Git-based project history
 
-Planned showcase files include joins, subqueries, common table expressions, window functions, views, stored procedures, functions, data validation, indexing, and query-performance techniques. More involved business analysis can be added later when it goes beyond demonstrating a single SQL concept.
+Planned showcase work includes additional join types, common table expressions, window functions, views, stored procedures, functions, data validation, indexing, and query-performance techniques. More involved business analysis can be added later when it goes beyond demonstrating a single SQL concept.
 
 ## Technology
 
@@ -37,24 +39,28 @@ The SQL project targets the SQL Server 2025 (`Sql170`) schema provider. My devel
 
 ## Data Source
 
-This project uses the [BikeStores sample database](https://www.sqlservertutorial.net/getting-started/sql-server-sample-database/) from SQLServerTutorial.net. The supplied setup scripts are retained in [`source-data/`](./source-data/); they are upstream sample data, not original analytical work.
+This project uses the [BikeStores sample database](https://www.sqlservertutorial.net/getting-started/sql-server-sample-database/) from SQLServerTutorial.net. The original BikeStores setup scripts are retained in [`source-data/`](./source-data/); they are upstream sample data, not original analytical work. The same directory also contains a project-specific, rerunnable HR setup script that supplies the small deterministic data set used by `JOIN.sql`.
 
-BikeStores uses two application schemas:
+The live demonstration database uses three relevant schemas:
 
 - `production`
 - `sales`
+- `hr`, containing the project-specific `candidates` and `employees` demonstration tables
 
 ## Repository Structure
 
 ```text
 bicycle-shop-analysis/
 ├── .vscode/
+│   ├── settings.json
 │   └── tasks.json
 ├── database/
 │   └── queries/
-│       ├── ORDER_BY.sql
-│       └── SELECT.sql
+│       ├── JOIN.sql
+│       ├── SELECT.sql
+│       └── ... additional focused concept files
 ├── source-data/
+│   ├── BikeStores Sample Database - Create HR schema and tables.sql
 │   ├── BikeStores Sample Database - create objects.sql
 │   ├── BikeStores Sample Database - drop all objects.sql
 │   └── BikeStores Sample Database - load data.sql
@@ -67,6 +73,8 @@ bicycle-shop-analysis/
 
 - [`SELECT.sql`](./database/queries/SELECT.sql) demonstrates projection, filtering, sorting, grouping, aggregation, and `HAVING`.
 - [`ORDER_BY.sql`](./database/queries/ORDER_BY.sql) demonstrates ascending and descending sorts, multiple sort keys, ordinal positions, nonprojected columns, and expressions.
+- [`IN_SUBQUERY.sql`](./database/queries/IN_SUBQUERY.sql) demonstrates list membership and a nested query against stock data.
+- [`JOIN.sql`](./database/queries/JOIN.sql) uses `hr.candidates` and `hr.employees` to answer which candidates were hired with an `INNER JOIN`.
 
 New concept demonstrations belong in `database/queries/`. The current structure intentionally keeps these examples together; a separate analysis area is only needed once the repository contains longer, multi-step investigations organized around business questions rather than individual SQL features.
 
@@ -130,6 +138,7 @@ Connect explicitly to `BikeStores`, then run these scripts in order:
 
 1. `source-data/BikeStores Sample Database - create objects.sql`
 2. `source-data/BikeStores Sample Database - load data.sql`
+3. `source-data/BikeStores Sample Database - Create HR schema and tables.sql`
 
 The scripts do not create or select the database, so confirm the connection context before running them:
 
@@ -138,7 +147,7 @@ SELECT DB_NAME() AS CurrentDatabase;
 GO
 ```
 
-The expected value is `BikeStores`.
+The expected value is `BikeStores`. The third script creates the `hr` schema when needed, then drops and recreates `hr.candidates` and `hr.employees` with four rows each. It is safe for a clean reproducible setup, but rerunning it discards changes made to those two demonstration tables.
 
 Do not run `BikeStores Sample Database - drop all objects.sql` during normal setup. It is destructive and is intended only for an explicit reset.
 
@@ -150,7 +159,7 @@ SELECT
     TABLE_NAME
 FROM INFORMATION_SCHEMA.TABLES
 WHERE TABLE_TYPE = 'BASE TABLE'
-  AND TABLE_SCHEMA IN (N'production', N'sales')
+  AND TABLE_SCHEMA IN (N'hr', N'production', N'sales')
 ORDER BY
     TABLE_SCHEMA,
     TABLE_NAME;
@@ -163,9 +172,17 @@ GO
 SELECT COUNT(*) AS OrderCount
 FROM sales.orders;
 GO
+
+SELECT COUNT(*) AS CandidateCount
+FROM hr.candidates;
+GO
+
+SELECT COUNT(*) AS EmployeeCount
+FROM hr.employees;
+GO
 ```
 
-The sample contains nine base tables, and both row counts should be greater than zero.
+The expected setup contains nine upstream BikeStores base tables plus the two HR demonstration tables. The product and order counts should be greater than zero; the deterministic HR script creates four candidates and four employees.
 
 ### 6. Run the analysis queries
 
@@ -189,6 +206,7 @@ A successful build validates the SQL project and creates build output under `bin
 ## Safety Notes
 
 - Do not run the drop-all-objects script unless a database reset is intentional.
+- Do not rerun the HR setup script if changes in `hr.candidates` or `hr.employees` must be preserved; it drops and recreates both tables.
 - Do not commit passwords, connection strings containing secrets, backups, or generated database files.
 - Always pass or verify the `BikeStores` database context before running setup or analysis scripts.
 - Building the SQL project is separate from publishing it to a database.

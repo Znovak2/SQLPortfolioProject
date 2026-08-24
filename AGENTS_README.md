@@ -18,11 +18,12 @@ Setup is complete only when all applicable checks below have passed:
 
 - SQL Server is running and reachable.
 - A database named `BikeStores` exists.
-- The `production` and `sales` schemas exist.
-- The nine BikeStores base tables exist.
+- The `production`, `sales`, and project-specific `hr` schemas exist.
+- The nine BikeStores base tables and two HR demonstration tables exist.
 - `production.products` and `sales.orders` contain rows.
+- `hr.candidates` and `hr.employees` each contain four deterministic rows.
 - `Bicycle Shop Analysis.sqlproj` builds when a compatible .NET SDK is available.
-- `database/queries/SELECT.sql` and `database/queries/ORDER_BY.sql` execute against `BikeStores`.
+- All checked-in files under `database/queries/` execute against `BikeStores`; `JOIN.sql` requires the HR setup script.
 
 Do not modify analytical SQL or documentation merely to make setup appear successful. Report missing prerequisites and validation failures accurately.
 
@@ -33,12 +34,12 @@ Important files, relative to the project root:
 ```text
 Bicycle Shop Analysis.sqlproj
 
-database/queries/SELECT.sql
-database/queries/ORDER_BY.sql
+database/queries/*.sql
 
 source-data/BikeStores Sample Database - create objects.sql
 source-data/BikeStores Sample Database - load data.sql
 source-data/BikeStores Sample Database - drop all objects.sql
+source-data/BikeStores Sample Database - Create HR schema and tables.sql
 ```
 
 Project configuration:
@@ -48,8 +49,10 @@ Build SDK:       Microsoft.Build.Sql 2.2.0
 Schema provider: Microsoft.Data.Tools.Schema.Sql.Sql170DatabaseSchemaProvider
 Target platform: SQL Server 2025
 Database name:   BikeStores
-Schemas:         production, sales
+Schemas:         production, sales, hr
 ```
+
+The lowercase-named BikeStores scripts are upstream sample assets. `BikeStores Sample Database - Create HR schema and tables.sql` is a project-specific, rerunnable fixture for the join examples; it creates `hr` when needed and drops and recreates only `hr.candidates` and `hr.employees`.
 
 The SQL project and live sample database have different roles. Building the project validates and packages source-controlled SQL; it does not create, populate, or publish the live database.
 
@@ -59,12 +62,13 @@ The SQL project and live sample database have different roles. Building the proj
 2. Do not run the drop-all-objects script during routine setup.
 3. Do not run destructive Docker commands such as `docker compose down -v`, `docker volume rm`, or broad prune commands.
 4. Do not commit passwords, secret-bearing connection strings, backups, database files, or generated build output.
-5. Do not modify upstream files under `source-data/` unless correcting a verified defect.
+5. Do not modify the three upstream BikeStores scripts under `source-data/` unless correcting a verified defect. The HR script is project-authored demonstration setup.
 6. Do not rewrite analytical SQL to satisfy a stylistic preference or conceal a setup failure.
 7. Do not force-push, reset Git history, delete branches, or publish the project to a remote database without explicit authorization.
 8. Prefer an existing working SQL Server instance over provisioning another one.
 9. If the database is partially initialized or its state is uncertain, report that state before attempting destructive recovery.
 10. If a privileged installation is unavailable or unsafe, report the missing prerequisite instead of bypassing system controls.
+11. Do not run the HR setup script when existing changes in `hr.candidates` or `hr.employees` must be retained; it drops and recreates both tables.
 
 ## Phase 1: Inspect the Repository and Environment
 
@@ -82,8 +86,10 @@ Confirm the required files:
 test -f "Bicycle Shop Analysis.sqlproj"
 test -f "source-data/BikeStores Sample Database - create objects.sql"
 test -f "source-data/BikeStores Sample Database - load data.sql"
+test -f "source-data/BikeStores Sample Database - Create HR schema and tables.sql"
 test -f "database/queries/SELECT.sql"
 test -f "database/queries/ORDER_BY.sql"
+test -f "database/queries/JOIN.sql"
 ```
 
 Inspect available tools without assuming they are installed:
@@ -234,19 +240,22 @@ SELECT
     TABLE_NAME
 FROM INFORMATION_SCHEMA.TABLES
 WHERE TABLE_TYPE = 'BASE TABLE'
-  AND TABLE_SCHEMA IN (N'production', N'sales')
+  AND TABLE_SCHEMA IN (N'hr', N'production', N'sales')
 ORDER BY
     TABLE_SCHEMA,
     TABLE_NAME;
 
 SELECT
     CASE WHEN OBJECT_ID(N'production.products', N'U') IS NULL THEN 0 ELSE 1 END AS ProductsTableExists,
-    CASE WHEN OBJECT_ID(N'sales.orders', N'U') IS NULL THEN 0 ELSE 1 END AS OrdersTableExists;
+    CASE WHEN OBJECT_ID(N'sales.orders', N'U') IS NULL THEN 0 ELSE 1 END AS OrdersTableExists,
+    CASE WHEN OBJECT_ID(N'hr.candidates', N'U') IS NULL THEN 0 ELSE 1 END AS CandidatesTableExists,
+    CASE WHEN OBJECT_ID(N'hr.employees', N'U') IS NULL THEN 0 ELSE 1 END AS EmployeesTableExists;
 ```
 
-- If the expected tables and data already exist, do not reload them.
-- If no expected objects exist, continue to Phase 4.
-- If only some objects exist, stop and report the partial state before considering a reset.
+- If all expected tables and data already exist, do not reload them.
+- If the nine BikeStores tables exist but the HR tables do not, run only the HR setup step in Phase 4.
+- If no expected objects exist, continue through all of Phase 4.
+- If only some BikeStores objects exist, stop and report the partial state before considering a reset.
 - If tables exist without data, confirm the load script will not duplicate existing rows before running it.
 
 ## Phase 4: Load the Schema and Data
@@ -271,6 +280,14 @@ sqlcmd \
   -d BikeStores \
   -b \
   -i "source-data/BikeStores Sample Database - load data.sql"
+
+sqlcmd \
+  -S "<server>" \
+  -U "<user>" \
+  -P "<password>" \
+  -d BikeStores \
+  -b \
+  -i "source-data/BikeStores Sample Database - Create HR schema and tables.sql"
 ```
 
 For Windows authentication, replace `-U` and `-P` with `-E`.
@@ -285,9 +302,11 @@ docker cp "source-data/BikeStores Sample Database - create objects.sql" \
   "bikestores-sql:/tmp/bikestores/create-objects.sql"
 docker cp "source-data/BikeStores Sample Database - load data.sql" \
   "bikestores-sql:/tmp/bikestores/load-data.sql"
+docker cp "source-data/BikeStores Sample Database - Create HR schema and tables.sql" \
+  "bikestores-sql:/tmp/bikestores/create-hr.sql"
 ```
 
-Run both scripts against `BikeStores`:
+Run all three scripts against `BikeStores`:
 
 ```bash
 docker exec bikestores-sql bash -lc \
@@ -295,9 +314,12 @@ docker exec bikestores-sql bash -lc \
 
 docker exec bikestores-sql bash -lc \
   '/opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -d BikeStores -b -i "/tmp/bikestores/load-data.sql"'
+
+docker exec bikestores-sql bash -lc \
+  '/opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -d BikeStores -b -i "/tmp/bikestores/create-hr.sql"'
 ```
 
-The `-b` flag makes `sqlcmd` return a failure status when SQL execution fails.
+The `-b` flag makes `sqlcmd` return a failure status when SQL execution fails. The HR script is intentionally rerunnable, but every run replaces the two HR demonstration tables and their contents.
 
 ## Phase 5: Validate the Database
 
@@ -308,7 +330,7 @@ SELECT DB_NAME() AS CurrentDatabase;
 
 SELECT name
 FROM sys.schemas
-WHERE name IN (N'production', N'sales')
+WHERE name IN (N'hr', N'production', N'sales')
 ORDER BY name;
 
 SELECT
@@ -316,7 +338,7 @@ SELECT
     TABLE_NAME
 FROM INFORMATION_SCHEMA.TABLES
 WHERE TABLE_TYPE = 'BASE TABLE'
-  AND TABLE_SCHEMA IN (N'production', N'sales')
+  AND TABLE_SCHEMA IN (N'hr', N'production', N'sales')
 ORDER BY
     TABLE_SCHEMA,
     TABLE_NAME;
@@ -326,6 +348,12 @@ FROM production.products;
 
 SELECT COUNT(*) AS OrderCount
 FROM sales.orders;
+
+SELECT COUNT(*) AS CandidateCount
+FROM hr.candidates;
+
+SELECT COUNT(*) AS EmployeeCount
+FROM hr.employees;
 
 SELECT TOP (5)
     product_id,
@@ -340,8 +368,10 @@ Expected context and structure:
 
 ```text
 Database: BikeStores
-Schemas:  production, sales
+Schemas:  hr, production, sales
 
+hr.candidates
+hr.employees
 production.brands
 production.categories
 production.products
@@ -353,7 +383,7 @@ sales.staffs
 sales.stores
 ```
 
-There should be nine base tables. `ProductCount` and `OrderCount` must both be greater than zero; do not claim exact row counts unless the checked-in source data has been used and the counts were measured.
+There should be 11 relevant base tables: nine from BikeStores and two from the project-specific HR fixture. `ProductCount` and `OrderCount` must both be greater than zero. `CandidateCount` and `EmployeeCount` should each be four after the checked-in HR script runs; do not claim exact BikeStores row counts unless the checked-in source data has been used and the counts were measured.
 
 ## Phase 6: Build the SQL Project
 
@@ -370,27 +400,21 @@ A successful build produces a DACPAC under `bin/`. It does not modify the live `
 
 ## Phase 7: Validate the Query Files
 
-Execute both files only against `BikeStores`:
+Execute every checked-in query file only against a database that has completed both the BikeStores and HR setup. On a POSIX shell, the generic `sqlcmd` validation loop is:
 
 ```bash
-sqlcmd \
-  -S "<server>" \
-  -U "<user>" \
-  -P "<password>" \
-  -d BikeStores \
-  -b \
-  -i "database/queries/SELECT.sql"
-
-sqlcmd \
-  -S "<server>" \
-  -U "<user>" \
-  -P "<password>" \
-  -d BikeStores \
-  -b \
-  -i "database/queries/ORDER_BY.sql"
+for query_file in database/queries/*.sql; do
+  sqlcmd \
+    -S "<server>" \
+    -U "<user>" \
+    -P "<password>" \
+    -d BikeStores \
+    -b \
+    -i "$query_file" || exit 1
+done
 ```
 
-For Windows authentication, replace `-U` and `-P` with `-E`. When using Docker, copy the query files into the container and use the same `sqlcmd` pattern documented in Phase 4.
+For Windows authentication, replace `-U` and `-P` with `-E`. On shells that do not support this loop, run the files individually with the same `sqlcmd` options. When using Docker, copy the query files into the container and use the same `sqlcmd` pattern documented in Phase 4. `JOIN.sql` will fail if the HR fixture was skipped.
 
 The purpose is validation. Do not rewrite a query unless the user asks for a query change or a verified defect requires correction.
 
@@ -407,9 +431,10 @@ Schemas found:
 Base table count:
 Product row count:
 Order row count:
+Candidate row count:
+Employee row count:
 SQL project build status:
-SELECT.sql execution status:
-ORDER_BY.sql execution status:
+Query files execution status:
 Files modified during setup:
 Outstanding issues:
 ```

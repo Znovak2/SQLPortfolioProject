@@ -1,0 +1,3 @@
+-- Q: What products have no sales at a per-store granularity?
+-- Bookmark | https://www.sqlservertutorial.net/sql-server-basics/sql-server-cross-join/
+-- Work is to be completed.

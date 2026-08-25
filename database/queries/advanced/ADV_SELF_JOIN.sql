@@ -1,4 +1,4 @@
--- SELF JOIN allws a table to join itself.
+-- SELF JOIN allows a table to join itself.
 -- It is useful for querying or retaining hierarchical data or to compare rows within the same table.
 -- The use of Aliases is required.
 

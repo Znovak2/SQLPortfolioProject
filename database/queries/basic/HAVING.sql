@@ -1,0 +1,1 @@
+-- HAVING is often used with the GROUP BY clause to filter *groups* based on a specific list of conditions.

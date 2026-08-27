@@ -1,29 +1,17 @@
 # Bicycle Shop Analysis
 
-A SQL Server portfolio project built on the BikeStores sample database. It is a growing collection of focused `.sql` files that demonstrate how I use different T-SQL features, from foundational syntax through increasingly advanced querying and analysis.
+A SQL Server portfolio project built on the BikeStores sample database. It contains focused T-SQL examples that progress from foundational querying into joins, grouping, subqueries, and more advanced relational patterns. The repository also demonstrates a complete database lifecycle: define the schema, load deterministic sample data, validate the queries, and remove the objects only when an intentional reset is required.
 
-The repository supports two review paths:
+You can review the project in two ways:
 
-1. Browse the SQL files and project history directly on GitHub.
-2. Recreate the BikeStores database locally and run the queries against live sample data.
+1. Browse the SQL files and Git history without running a database.
+2. Recreate `BikeStores` locally and execute the examples against live sample data.
 
 ## Project Status
 
-The current phase focuses on foundational querying. The repository contains working examples for `SELECT`, filtering, sorting, grouping, aggregation, subqueries, aliases, and an introductory `INNER JOIN`. Each concept is kept in a focused file so the code is easy to review and the progression is visible over time.
+The basic collection currently covers selection, filtering, sorting, pagination, grouping, aggregation, `HAVING`, subqueries, aliases, null handling, and the main join types. The advanced collection currently includes a completed self-join exploration; `ADV_CROSS_JOIN.sql` is a clearly marked placeholder for planned work.
 
-## Current Topics
-
-- Selecting and filtering data
-- Sorting and grouping results
-- Aggregate functions and `HAVING`
-- Aliases, range predicates, pattern matching, and subqueries
-- An `INNER JOIN` example backed by deterministic HR demonstration data
-- Clear, commented examples of individual SQL methods
-- SQL Database Project organization and builds
-- Reproducible sample-database setup
-- Git-based project history
-
-Planned showcase work includes additional join types, common table expressions, window functions, views, stored procedures, functions, data validation, indexing, and query-performance techniques. More involved business analysis can be added later when it goes beyond demonstrating a single SQL concept.
+Future showcase work includes completing the advanced cross-join example, common table expressions, window functions, views, stored procedures, functions, data validation, indexing, and query-performance techniques.
 
 ## Technology
 
@@ -35,94 +23,75 @@ Planned showcase work includes additional join types, common table expressions, 
 - Microsoft.Build.Sql 2.2.0
 - Git and GitHub
 
-The SQL project targets the SQL Server 2025 (`Sql170`) schema provider. My development instance runs in Docker on an Ubuntu Server VM, but any compatible SQL Server instance can be used to review the project.
+The SQL project targets the SQL Server 2025 (`Sql170`) schema provider. My development instance runs in Docker on an Ubuntu Server VM, but any compatible SQL Server instance can be used.
 
-## Data Source
+## Data Source and Schemas
 
-This project uses the [BikeStores sample database](https://www.sqlservertutorial.net/getting-started/sql-server-sample-database/) from SQLServerTutorial.net. The original BikeStores setup scripts are retained in [`source-data/`](./source-data/); they are upstream sample data, not original analytical work. The same directory also contains a project-specific, rerunnable HR setup script that supplies the small deterministic data set used by `JOIN.sql`.
+This project adapts the [BikeStores sample database](https://www.sqlservertutorial.net/getting-started/sql-server-sample-database/) from SQLServerTutorial.net. The checked-in schema and seed scripts retain the upstream attribution and extend the sample with deterministic `hr` and `pm` data used by the join demonstrations.
 
-The live demonstration database uses three relevant schemas:
+The live database contains four schemas:
 
-- `production`
-- `sales`
-- `hr`, containing the project-specific `candidates` and `employees` demonstration tables
+- `production` and `sales` contain the BikeStores tables.
+- `hr` contains candidate and employee data for join examples.
+- `pm` contains project and member data for cross-join examples.
 
 ## Repository Structure
 
 ```text
 bicycle-shop-analysis/
 ├── .vscode/
+│   ├── extensions.json
 │   ├── settings.json
 │   └── tasks.json
 ├── database/
-│   └── queries/
-│       ├── JOIN.sql
-│       ├── SELECT.sql
-│       └── ... additional focused concept files
-├── source-data/
-│   ├── BikeStores Sample Database - Create HR schema and tables.sql
-│   ├── BikeStores Sample Database - create objects.sql
-│   ├── BikeStores Sample Database - drop all objects.sql
-│   └── BikeStores Sample Database - load data.sql
-├── AGENTS_README.md
+│   ├── queries/
+│   │   ├── basic/       # Focused foundational examples
+│   │   └── advanced/    # More involved examples and planned work
+│   ├── schema/          # Creates schemas, tables, keys, and constraints
+│   ├── seed/            # Loads BikeStores and demonstration data
+│   └── utilities/       # Destructive reset script
+├── AGENTS_README.md     # Detailed setup and safety runbook
 ├── Bicycle Shop Analysis.sqlproj
 └── README.md
 ```
 
-### SQL showcase files
-
-- [`SELECT.sql`](./database/queries/SELECT.sql) demonstrates projection, filtering, sorting, grouping, aggregation, and `HAVING`.
-- [`ORDER_BY.sql`](./database/queries/ORDER_BY.sql) demonstrates ascending and descending sorts, multiple sort keys, ordinal positions, nonprojected columns, and expressions.
-- [`IN_SUBQUERY.sql`](./database/queries/IN_SUBQUERY.sql) demonstrates list membership and a nested query against stock data.
-- [`JOIN.sql`](./database/queries/JOIN.sql) uses `hr.candidates` and `hr.employees` to answer which candidates were hired with an `INNER JOIN`.
-
-New concept demonstrations belong in `database/queries/`. The current structure intentionally keeps these examples together; a separate analysis area is only needed once the repository contains longer, multi-step investigations organized around business questions rather than individual SQL features.
-
-### SQL project
-
-[`Bicycle Shop Analysis.sqlproj`](./Bicycle%20Shop%20Analysis.sqlproj) is an SDK-style Microsoft.Build.Sql project. A build validates the project and produces a DACPAC; it does not create or populate the live `BikeStores` database.
-
-### Setup runbook
-
-[`AGENTS_README.md`](./AGENTS_README.md) contains the detailed environment, command-line, Docker, validation, safety, and cleanup procedures used to reproduce the project consistently.
-
 ## Review the SQL
 
-### Browse on GitHub
+The repository can be browsed on GitHub or through [VS Code for the Web](https://vscode.dev/github/Znovak2/sql-portfolio). Start with these representative files:
 
-The SQL, comments, project configuration, sample setup scripts, and Git history can all be inspected without installing SQL Server. The repository can also be browsed through [VS Code for the Web](https://vscode.dev/github/Znovak2/sql-portfolio).
+- [`SELECT.sql`](./database/queries/basic/SELECT.sql) builds from projection and filtering through grouping and `HAVING`.
+- [`GROUP_BY.sql`](./database/queries/basic/GROUP_BY.sql) develops grouped reporting patterns and aggregate calculations.
+- [`SUBQUERY.sql`](./database/queries/basic/SUBQUERY.sql) demonstrates list membership, nested filters, and multiple levels of nesting.
+- [`JOIN.sql`](./database/queries/basic/JOIN.sql) compares inner, outer, and anti-join patterns against deterministic HR data.
+- [`ADV_SELF_JOIN.sql`](./database/queries/advanced/ADV_SELF_JOIN.sql) uses self joins for reporting hierarchies and comparing customers within a city.
 
-Start with the files under [`database/queries/`](./database/queries/). Executing them is optional and requires a populated `BikeStores` database.
-
-### Run the queries live
-
-Follow the local setup below to create `BikeStores`, load the sample data, and execute the same showcase files against SQL Server. For a command-line or Docker-based setup, use the more detailed [`AGENTS_README.md`](./AGENTS_README.md) runbook.
+Browse [`database/queries/basic/`](./database/queries/basic/) for the completed concept examples and [`database/queries/advanced/`](./database/queries/advanced/) for advanced or explicitly planned work. Executing the files is optional and requires a populated `BikeStores` database.
 
 ## Local Setup
 
-### 1. Clone the repository
+### 1. Clone and enter the project
 
 ```bash
-git clone https://github.com/Znovak2/sql-portfolio.git bicycle-shop-analysis
-cd bicycle-shop-analysis
+git clone https://github.com/Znovak2/sql-portfolio.git
+cd sql-portfolio
 ```
 
-All commands below assume `bicycle-shop-analysis/` is the current directory.
+All commands below assume the repository root is the current directory.
 
-### 2. Install the tools
+### 2. Install the prerequisites
 
-Install or make available:
+Make available:
 
-- a compatible SQL Server instance,
-- Visual Studio Code,
-- the Microsoft SQL Server (`mssql`) extension, and
-- the SQL Database Projects extension.
+- a compatible SQL Server instance;
+- Visual Studio Code with the recommended `mssql` and SQL Database Projects extensions, if using the editor workflow;
+- a supported .NET SDK for command-line project builds; and
+- `sqlcmd` for command-line database setup and validation.
 
-For command-line project builds, install a supported .NET SDK. For command-line database setup, install `sqlcmd` or use the copy bundled in the SQL Server container image.
+The detailed [`AGENTS_README.md`](./AGENTS_README.md) runbook also documents an optional Docker path.
 
-### 3. Create the database
+### 3. Create a clean database
 
-Connect to the server and create `BikeStores` only if it does not already exist:
+Connect to SQL Server and create `BikeStores` only if it does not already exist:
 
 ```sql
 IF DB_ID(N'BikeStores') IS NULL
@@ -132,85 +101,69 @@ END;
 GO
 ```
 
+Before continuing, inspect an existing `BikeStores` database. The schema script creates tables without dropping existing ones, and the seed script inserts fixed identifiers; do not run either over a partial or populated copy.
+
 ### 4. Create the objects and load the data
 
-Connect explicitly to `BikeStores`, then run these scripts in order:
+Run these scripts in order against `BikeStores`:
 
-1. `source-data/BikeStores Sample Database - create objects.sql`
-2. `source-data/BikeStores Sample Database - load data.sql`
-3. `source-data/BikeStores Sample Database - Create HR schema and tables.sql`
+1. `database/schema/BikeStores Sample Database - create objects.sql`
+2. `database/seed/BikeStores Sample Database - load data.sql`
 
-The scripts do not create or select the database, so confirm the connection context before running them:
+The first script creates the `production`, `sales`, `hr`, and `pm` schemas and their 13 tables. The second loads the BikeStores sample rows plus deterministic HR and project-management fixtures.
+
+Do not run `database/utilities/BikeStores Sample Database - drop all objects.sql` during normal setup. It removes all four project schemas and their objects and is intended only for an explicit reset.
+
+### 5. Validate the database
 
 ```sql
 SELECT DB_NAME() AS CurrentDatabase;
 GO
-```
 
-The expected value is `BikeStores`. The third script creates the `hr` schema when needed, then drops and recreates `hr.candidates` and `hr.employees` with four rows each. It is safe for a clean reproducible setup, but rerunning it discards changes made to those two demonstration tables.
-
-Do not run `BikeStores Sample Database - drop all objects.sql` during normal setup. It is destructive and is intended only for an explicit reset.
-
-### 5. Validate the sample database
-
-```sql
 SELECT
     TABLE_SCHEMA,
     TABLE_NAME
 FROM INFORMATION_SCHEMA.TABLES
 WHERE TABLE_TYPE = 'BASE TABLE'
-  AND TABLE_SCHEMA IN (N'hr', N'production', N'sales')
+  AND TABLE_SCHEMA IN (N'hr', N'pm', N'production', N'sales')
 ORDER BY
     TABLE_SCHEMA,
     TABLE_NAME;
 GO
 
-SELECT COUNT(*) AS ProductCount
-FROM production.products;
-GO
-
-SELECT COUNT(*) AS OrderCount
-FROM sales.orders;
-GO
-
-SELECT COUNT(*) AS CandidateCount
-FROM hr.candidates;
-GO
-
-SELECT COUNT(*) AS EmployeeCount
-FROM hr.employees;
+SELECT COUNT(*) AS ProductCount FROM production.products;
+SELECT COUNT(*) AS OrderCount FROM sales.orders;
+SELECT COUNT(*) AS CandidateCount FROM hr.candidates;
+SELECT COUNT(*) AS EmployeeCount FROM hr.employees;
+SELECT COUNT(*) AS ProjectCount FROM pm.projects;
+SELECT COUNT(*) AS MemberCount FROM pm.members;
 GO
 ```
 
-The expected setup contains nine upstream BikeStores base tables plus the two HR demonstration tables. The product and order counts should be greater than zero; the deterministic HR script creates four candidates and four employees.
+The expected result is `BikeStores`, 13 base tables, nonzero product and order counts, four candidates, four employees, three projects, and four members.
 
-### 6. Run the analysis queries
+### 6. Run the query examples
 
-Open a file under `database/queries/`, connect it to `BikeStores`, and run either individual statements or the complete file. Verify the active database whenever the connection is uncertain:
-
-```sql
-SELECT DB_NAME() AS CurrentDatabase;
-GO
-```
+Open a completed file under `database/queries/basic/` or `database/queries/advanced/`, connect it to `BikeStores`, and run individual statements or the complete file. `ADV_CROSS_JOIN.sql` is planned work and contains no executable query yet.
 
 ### 7. Build the SQL project
-
-From the project root:
 
 ```bash
 dotnet build "Bicycle Shop Analysis.sqlproj"
 ```
 
-A successful build validates the SQL project and creates build output under `bin/` and `obj/`. Those generated directories should not be committed.
+A successful build validates the SQL project and creates a DACPAC under `bin/`. It does not create, populate, publish, or otherwise change the live database. Generated `bin/` and `obj/` directories should not be committed.
 
 ## Safety Notes
 
-- Do not run the drop-all-objects script unless a database reset is intentional.
-- Do not rerun the HR setup script if changes in `hr.candidates` or `hr.employees` must be preserved; it drops and recreates both tables.
-- Do not commit passwords, connection strings containing secrets, backups, or generated database files.
-- Always pass or verify the `BikeStores` database context before running setup or analysis scripts.
-- Building the SQL project is separate from publishing it to a database.
+- Inspect an existing `BikeStores` database before loading data; the checked-in lifecycle scripts target a clean database.
+- Never run the drop-all-objects utility unless a reset is intentional.
+- Do not commit passwords, secret-bearing connection strings, backups, or generated database files.
+- Pass or verify the `BikeStores` database context before running setup or query scripts.
+- Treat building, loading sample data, publishing a DACPAC, and dropping objects as separate operations.
+
+For command-line, Docker, troubleshooting, and complete validation procedures, see [`AGENTS_README.md`](./AGENTS_README.md).
 
 ## Attribution
 
-The BikeStores sample database and original setup scripts are provided by [SQLServerTutorial.net](https://www.sqlservertutorial.net/getting-started/sql-server-sample-database/). The analytical queries, project organization, documentation, and conclusions in this repository are my own unless otherwise noted.
+The BikeStores sample database and original data are provided by [SQLServerTutorial.net](https://www.sqlservertutorial.net/getting-started/sql-server-sample-database/). The analytical queries, project-specific fixtures and extensions, project organization, documentation, and conclusions are my own unless otherwise noted.

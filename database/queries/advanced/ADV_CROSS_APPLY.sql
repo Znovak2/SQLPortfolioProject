@@ -1,0 +1,2 @@
+-- The CROSS APPLY clause allows you to perform an inner join a table with a table-valued function or a correlated subquery.
+-- In SQL Server, a table-valued function is a user-defined function that returns multiple rows as a table.

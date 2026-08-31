@@ -58,6 +58,15 @@ GO
 ------------------------------------------------------------
 -- PRODUCTION TABLES
 ------------------------------------------------------------
+CREATE TABLE companies(
+   id INT IDENTITY PRIMARY KEY,
+   name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE product_json(
+    id INT IDENTITY PRIMARY KEY,
+    info NVARCHAR(MAX)
+);
 
 CREATE TABLE production.categories (
     category_id INT IDENTITY (1, 1) PRIMARY KEY,

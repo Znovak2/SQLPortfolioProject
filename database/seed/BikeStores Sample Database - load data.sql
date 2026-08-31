@@ -21,6 +21,24 @@ Loads deterministic sample data after database objects are created.
 Run schema/create_objects.sql before this script.
 --------------------------------------------------------------------
 */
+------------------------------------------------------------
+-- Company DATA
+------------------------------------------------------------
+INSERT INTO
+  companies (name)
+VALUES
+  ('ABC Corporation'),
+  ('XYZ Inc.'),
+  ('JK Pte Ltd');
+------------------------------------------------------------
+-- product_json DATA
+------------------------------------------------------------
+INSERT INTO product_json(info)
+VALUES
+    ('{"Name": "Laptop", "Price": 999, "Category": "Electronics"}'),
+    ('{"Name": "Headphones", "Price": 99, "Category": "Electronics"}'),
+    ('{"Name": "Book", "Price": 15, "Category": "Books"}');
+
 
 ------------------------------------------------------------
 -- HR DATA

@@ -9,9 +9,9 @@ You can review the project in two ways:
 
 ## Project Status
 
-The basic collection currently covers selection, filtering, sorting, pagination, grouping, aggregation, `HAVING`, subqueries, aliases, null handling, and the main join types. The advanced collection currently includes a completed self-join exploration; `ADV_CROSS_JOIN.sql` is a clearly marked placeholder for planned work.
+The basic collection currently covers selection, filtering, sorting, pagination, grouping, aggregation, `HAVING`, subqueries, aliases, null handling, joins, and the `ALL`, `ANY`, and `EXISTS` operators. The advanced collection includes completed correlated-subquery, self-join, and `CROSS APPLY` explorations. `ADV_CROSS_JOIN.sql` is a clearly marked placeholder for planned work.
 
-Future showcase work includes completing the advanced cross-join example, common table expressions, window functions, views, stored procedures, functions, data validation, indexing, and query-performance techniques.
+Future showcase work includes completing the advanced cross-join example, common table expressions, window functions, views, stored procedures, additional functions, data validation, indexing, and query-performance techniques.
 
 ## Technology
 
@@ -27,13 +27,14 @@ The SQL project targets the SQL Server 2025 (`Sql170`) schema provider. My devel
 
 ## Data Source and Schemas
 
-This project adapts the [BikeStores sample database](https://www.sqlservertutorial.net/getting-started/sql-server-sample-database/) from SQLServerTutorial.net. The checked-in schema and seed scripts retain the upstream attribution and extend the sample with deterministic `hr` and `pm` data used by the join demonstrations.
+This project adapts the [BikeStores sample database](https://www.sqlservertutorial.net/getting-started/sql-server-sample-database/) from SQLServerTutorial.net. The checked-in schema and seed scripts retain the upstream attribution and extend the sample with deterministic `hr` and `pm` data for join demonstrations plus company-name and JSON fixtures for `CROSS APPLY` examples.
 
-The live database contains four schemas:
+Project objects use four named schemas plus two helper tables in the executing user's default schema:
 
 - `production` and `sales` contain the BikeStores tables.
 - `hr` contains candidate and employee data for join examples.
-- `pm` contains project and member data for cross-join examples.
+- `pm` contains project and member data for the full-outer-join examples.
+- `companies` and `product_json` provide deterministic string and JSON data for the `CROSS APPLY` examples. With the documented setup, these unqualified objects resolve to `dbo.companies` and `dbo.product_json`.
 
 ## Repository Structure
 
@@ -49,9 +50,10 @@ bicycle-shop-analysis/
 │   │   └── advanced/    # More involved examples and planned work
 │   ├── schema/          # Creates schemas, tables, keys, and constraints
 │   ├── seed/            # Loads BikeStores and demonstration data
-│   └── utilities/       # Destructive reset script
+│   └── utilities/       # Destructive partial-cleanup script
 ├── AGENTS_README.md     # Detailed setup and safety runbook
 ├── Bicycle Shop Analysis.sqlproj
+├── Definitions.md       # Short glossary of SQL concepts used in the project
 └── README.md
 ```
 
@@ -62,10 +64,13 @@ The repository can be browsed on GitHub or through [VS Code for the Web](https:/
 - [`SELECT.sql`](./database/queries/basic/SELECT.sql) builds from projection and filtering through grouping and `HAVING`.
 - [`GROUP_BY.sql`](./database/queries/basic/GROUP_BY.sql) develops grouped reporting patterns and aggregate calculations.
 - [`SUBQUERY.sql`](./database/queries/basic/SUBQUERY.sql) demonstrates list membership, nested filters, and multiple levels of nesting.
+- [`EXISTS.sql`](./database/queries/basic/EXISTS.sql) contrasts `EXISTS` and `NOT EXISTS`, including null behavior.
 - [`JOIN.sql`](./database/queries/basic/JOIN.sql) compares inner, outer, and anti-join patterns against deterministic HR data.
+- [`ADV_CORR_SUBQUERY.sql`](./database/queries/advanced/ADV_CORR_SUBQUERY.sql) uses a correlated subquery to find each category's highest-priced products while retaining ties.
+- [`ADV_CROSS_APPLY.sql`](./database/queries/advanced/ADV_CROSS_APPLY.sql) combines a table-valued function, a correlated subquery, JSON parsing, and incremental string cleanup. It creates or updates `GetTopProductsByCategory` when executed.
 - [`ADV_SELF_JOIN.sql`](./database/queries/advanced/ADV_SELF_JOIN.sql) uses self joins for reporting hierarchies and comparing customers within a city.
 
-Browse [`database/queries/basic/`](./database/queries/basic/) for the completed concept examples and [`database/queries/advanced/`](./database/queries/advanced/) for advanced or explicitly planned work. Executing the files is optional and requires a populated `BikeStores` database.
+Browse [`database/queries/basic/`](./database/queries/basic/) for the completed concept examples, [`database/queries/advanced/`](./database/queries/advanced/) for advanced or explicitly planned work, and [`Definitions.md`](./Definitions.md) for concise terminology notes. Executing the SQL files is optional and requires a populated `BikeStores` database.
 
 ## Local Setup
 
@@ -89,6 +94,8 @@ Make available:
 
 The detailed [`AGENTS_README.md`](./AGENTS_README.md) runbook also documents an optional Docker path.
 
+The schema and `ADV_CROSS_APPLY.sql` currently use unqualified helper-object names. Run setup and the query examples as a database user whose default schema is `dbo`, or ensure those names resolve to the same schema throughout the workflow.
+
 ### 3. Create a clean database
 
 Connect to SQL Server and create `BikeStores` only if it does not already exist:
@@ -110,9 +117,9 @@ Run these scripts in order against `BikeStores`:
 1. `database/schema/BikeStores Sample Database - create objects.sql`
 2. `database/seed/BikeStores Sample Database - load data.sql`
 
-The first script creates the `production`, `sales`, `hr`, and `pm` schemas and their 13 tables. The second loads the BikeStores sample rows plus deterministic HR and project-management fixtures.
+The first script creates the `production`, `sales`, `hr`, and `pm` schemas, 13 schema-qualified tables, and the `companies` and `product_json` helper tables in the executing user's default schema. The second loads the BikeStores sample rows plus deterministic HR, project-management, company-name, and JSON fixtures.
 
-Do not run `database/utilities/BikeStores Sample Database - drop all objects.sql` during normal setup. It removes all four project schemas and their objects and is intended only for an explicit reset.
+Do not run `database/utilities/BikeStores Sample Database - drop all objects.sql` during normal setup. It destructively removes the 13 tables under the four named project schemas, but it does not currently remove `companies`, `product_json`, or `GetTopProductsByCategory`; it is therefore a partial cleanup rather than a complete reset of the current project.
 
 ### 5. Validate the database
 
@@ -125,7 +132,7 @@ SELECT
     TABLE_NAME
 FROM INFORMATION_SCHEMA.TABLES
 WHERE TABLE_TYPE = 'BASE TABLE'
-  AND TABLE_SCHEMA IN (N'hr', N'pm', N'production', N'sales')
+  AND TABLE_SCHEMA IN (N'dbo', N'hr', N'pm', N'production', N'sales')
 ORDER BY
     TABLE_SCHEMA,
     TABLE_NAME;
@@ -137,14 +144,20 @@ SELECT COUNT(*) AS CandidateCount FROM hr.candidates;
 SELECT COUNT(*) AS EmployeeCount FROM hr.employees;
 SELECT COUNT(*) AS ProjectCount FROM pm.projects;
 SELECT COUNT(*) AS MemberCount FROM pm.members;
+SELECT COUNT(*) AS CompanyCount FROM dbo.companies;
+SELECT COUNT(*) AS JsonProductCount FROM dbo.product_json;
 GO
 ```
 
-The expected result is `BikeStores`, 13 base tables, nonzero product and order counts, four candidates, four employees, three projects, and four members.
+On a clean database using `dbo` as the default schema, the expected result is `BikeStores`, 15 base tables, nonzero product and order counts, four candidates, four employees, three projects, four members, three companies, and three JSON product rows.
 
 ### 6. Run the query examples
 
-Open a completed file under `database/queries/basic/` or `database/queries/advanced/`, connect it to `BikeStores`, and run individual statements or the complete file. `ADV_CROSS_JOIN.sql` is planned work and contains no executable query yet.
+Open a completed file under `database/queries/basic/` or `database/queries/advanced/`, connect it to `BikeStores`, and run individual statements or the complete file. `ADV_CROSS_JOIN.sql` is the only planned file with no executable query yet.
+
+In VS Code, the `BikeStores: Validate database` and `Queries: Run portfolio queries` tasks provide the same post-setup validation path for SQL-authenticated connections. They prompt for the server, user, and password; the query task runs every completed example and excludes `ADV_CROSS_JOIN.sql`.
+
+Most query files are read-only demonstrations. `ADV_CROSS_APPLY.sql` is the exception: it creates or alters the `GetTopProductsByCategory` table-valued function before running its result-set examples.
 
 ### 7. Build the SQL project
 
@@ -154,10 +167,12 @@ dotnet build "Bicycle Shop Analysis.sqlproj"
 
 A successful build validates the SQL project and creates a DACPAC under `bin/`. It does not create, populate, publish, or otherwise change the live database. Generated `bin/` and `obj/` directories should not be committed.
 
+VS Code users can run the equivalent default build task, `SQL Project: Build`.
+
 ## Safety Notes
 
 - Inspect an existing `BikeStores` database before loading data; the checked-in lifecycle scripts target a clean database.
-- Never run the drop-all-objects utility unless a reset is intentional.
+- Never run the drop-all-objects utility unless destructive partial cleanup is intentional; it does not remove the current default-schema helper objects.
 - Do not commit passwords, secret-bearing connection strings, backups, or generated database files.
 - Pass or verify the `BikeStores` database context before running setup or query scripts.
 - Treat building, loading sample data, publishing a DACPAC, and dropping objects as separate operations.

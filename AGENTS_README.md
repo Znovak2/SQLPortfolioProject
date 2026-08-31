@@ -17,14 +17,15 @@ Setup is complete only when all applicable checks have passed:
 - SQL Server is running and reachable.
 - A database named `BikeStores` exists.
 - The `production`, `sales`, `hr`, and `pm` schemas exist.
-- All 13 base tables defined by the checked-in schema exist.
+- All 15 base tables defined by the checked-in schema exist when the setup user's default schema is `dbo`.
 - `production.products` and `sales.orders` contain rows.
 - `hr.candidates` and `hr.employees` contain four rows each.
 - `pm.projects` contains three rows and `pm.members` contains four rows.
+- `dbo.companies` and `dbo.product_json` contain three rows each.
 - `Bicycle Shop Analysis.sqlproj` builds when a compatible .NET SDK is available.
 - Every completed file under `database/queries/basic/` and `database/queries/advanced/` executes against `BikeStores`.
 
-`database/queries/advanced/ADV_CROSS_JOIN.sql` is planned work and currently contains comments only, so it has no executable validation requirement.
+`database/queries/advanced/ADV_CROSS_JOIN.sql` is planned work and currently contains comments only, so it has no executable validation requirement. `database/queries/advanced/ADV_CROSS_APPLY.sql` is executable and creates or alters `GetTopProductsByCategory` as part of its demonstration.
 
 Do not modify analytical SQL or documentation merely to make setup appear successful. Report missing prerequisites and validation failures accurately.
 
@@ -34,6 +35,7 @@ Important paths, relative to the project root:
 
 ```text
 Bicycle Shop Analysis.sqlproj
+.vscode/tasks.json
 
 database/queries/basic/*.sql
 database/queries/advanced/*.sql
@@ -49,18 +51,18 @@ Build SDK:       Microsoft.Build.Sql 2.2.0
 Schema provider: Microsoft.Data.Tools.Schema.Sql.Sql170DatabaseSchemaProvider
 Target platform: SQL Server 2025
 Database name:   BikeStores
-Schemas:         production, sales, hr, pm
-Base tables:     13
+Schemas:         production, sales, hr, pm; helper tables use the default schema
+Base tables:     15 when the setup user's default schema is dbo
 ```
 
-The schema and seed scripts adapt the attributed BikeStores sample and add deterministic HR and project-management fixtures used by the query examples. They target a clean `BikeStores` database. The schema script creates tables without first dropping existing tables, and the seed script inserts fixed identifiers and fixture rows; neither is a routine migration or an idempotent reload.
+The schema and seed scripts adapt the attributed BikeStores sample and add deterministic HR, project-management, company-name, and JSON fixtures used by the query examples. The `companies` and `product_json` tables are unqualified in the scripts, so the documented setup requires a database user whose default schema is `dbo`. The scripts target a clean `BikeStores` database. The schema script creates tables without first dropping existing tables, and the seed script inserts fixed identifiers and fixture rows; neither is a routine migration or an idempotent reload.
 
 The SQL project and live sample database have different roles. Building the project validates and packages source-controlled SQL; it does not create, populate, publish, or modify the live database.
 
 ## Safety Rules
 
 1. Do not delete an existing database unless the user explicitly requests it.
-2. Do not run the drop-all-objects utility during routine setup.
+2. Do not run the drop-all-objects utility during routine setup. It is destructive and currently performs only a partial cleanup: it does not remove `companies`, `product_json`, or `GetTopProductsByCategory`.
 3. Do not load the schema or seed scripts over a partial or populated database.
 4. Do not run destructive Docker commands such as `docker compose down -v`, `docker volume rm`, or broad prune commands.
 5. Do not commit passwords, secret-bearing connection strings, backups, database files, or generated build output.
@@ -90,6 +92,7 @@ test -f "database/queries/basic/SELECT.sql"
 test -f "database/queries/basic/SUBQUERY.sql"
 test -f "database/queries/basic/JOIN.sql"
 test -f "database/queries/advanced/ADV_SELF_JOIN.sql"
+test -f "database/queries/advanced/ADV_CROSS_APPLY.sql"
 ```
 
 Inspect available tools without assuming they are installed:
@@ -212,16 +215,21 @@ Inspect the database before loading anything:
 USE BikeStores;
 
 SELECT
+    USER_NAME() AS DatabaseUser,
+    SCHEMA_NAME() AS DefaultSchema;
+
+SELECT
     TABLE_SCHEMA,
     TABLE_NAME
 FROM INFORMATION_SCHEMA.TABLES
 WHERE TABLE_TYPE = 'BASE TABLE'
-  AND TABLE_SCHEMA IN (N'hr', N'pm', N'production', N'sales')
+  AND TABLE_SCHEMA IN (N'dbo', N'hr', N'pm', N'production', N'sales')
 ORDER BY
     TABLE_SCHEMA,
     TABLE_NAME;
 ```
 
+- Continue only when `DefaultSchema` is `dbo`; the current helper tables and function use unqualified names.
 - If no project tables exist, continue through Phase 4.
 - If all expected tables and data already exist, skip loading and continue to validation.
 - If only some objects exist, stop and report the partial state before considering a reset.
@@ -295,20 +303,25 @@ SELECT COUNT(*) AS CandidateCount FROM hr.candidates;
 SELECT COUNT(*) AS EmployeeCount FROM hr.employees;
 SELECT COUNT(*) AS ProjectCount FROM pm.projects;
 SELECT COUNT(*) AS MemberCount FROM pm.members;
+SELECT COUNT(*) AS CompanyCount FROM dbo.companies;
+SELECT COUNT(*) AS JsonProductCount FROM dbo.product_json;
 ```
 
 Expected structure and fixture counts:
 
 ```text
 Database:       BikeStores
+Default schema: dbo
 Schemas:        hr, pm, production, sales
-Base tables:    13
+Base tables:    15
 Products:       greater than zero
 Orders:         greater than zero
 Candidates:     4
 Employees:      4
 Projects:       3
 Members:        4
+Companies:      3
+JSON products:  3
 ```
 
 Do not claim exact upstream BikeStores row counts unless the checked-in seed data was used and the counts were measured.
@@ -328,7 +341,9 @@ Execute every completed query only after the database passes Phase 5. On a POSIX
 
 ```bash
 find database/queries/basic database/queries/advanced \
-  -type f -name '*.sql' ! -name 'ADV_CROSS_JOIN.sql' -print0 |
+  -type f -name '*.sql' \
+  ! -name 'ADV_CROSS_JOIN.sql' \
+  -print0 |
 while IFS= read -r -d '' query_file; do
   sqlcmd \
     -S "<server>" \
@@ -340,6 +355,10 @@ done
 ```
 
 For Windows authentication, replace `-U "<user>"` with `-E`. On shells that do not support this loop, run the files individually with the same options. When using Docker, copy both query directories into the container and use the same `sqlcmd` pattern documented in Phase 4.
+
+For SQL-authenticated connections, VS Code provides equivalent `BikeStores: Validate database` and `Queries: Run portfolio queries` tasks. Both prompt for connection values, and the query task explicitly lists every completed query while excluding the comment-only `ADV_CROSS_JOIN.sql`. Use the documented command-line path for Windows authentication.
+
+Most query files are read-only. `ADV_CROSS_APPLY.sql` creates or alters `GetTopProductsByCategory` before running its examples, so validation of every completed file makes that intentional schema change. Its unqualified helper-object references also assume the same default schema used during setup.
 
 The purpose is validation. Do not rewrite a query unless the user asks for a query change or a verified defect requires correction.
 
@@ -360,6 +379,8 @@ Candidate row count:
 Employee row count:
 Project row count:
 Member row count:
+Company row count:
+JSON product row count:
 SQL project build status:
 Completed query files execution status:
 Files modified during setup:
@@ -377,7 +398,7 @@ docker stop bikestores-sql
 docker start bikestores-sql
 ```
 
-The checked-in utility drops every table and then the `hr`, `pm`, `production`, and `sales` schemas. It is destructive and should be run only against the intended `BikeStores` database as part of an explicitly authorized reset:
+The checked-in utility drops the 13 tables under `hr`, `pm`, `production`, and `sales`, then drops those four schemas. It does not remove the current default-schema `companies` and `product_json` tables or the `GetTopProductsByCategory` function, so it is not a complete reset. It is destructive and should be run only against the intended `BikeStores` database as part of explicitly authorized partial cleanup:
 
 ```bash
 sqlcmd \

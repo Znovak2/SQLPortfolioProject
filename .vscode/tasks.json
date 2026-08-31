@@ -74,7 +74,7 @@
                 "BikeStores",
                 "-b",
                 "-Q",
-                "SET NOCOUNT ON; SELECT DB_NAME() AS CurrentDatabase; SELECT COUNT(*) AS BaseTableCount FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_SCHEMA IN ('hr', 'production', 'sales'); SELECT COUNT(*) AS ProductCount FROM production.products; SELECT COUNT(*) AS OrderCount FROM sales.orders; SELECT COUNT(*) AS CandidateCount FROM hr.candidates; SELECT COUNT(*) AS EmployeeCount FROM hr.employees;"
+                "SET NOCOUNT ON; SELECT DB_NAME() AS CurrentDatabase; SELECT COUNT(*) AS BaseTableCount FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_SCHEMA IN ('dbo', 'hr', 'pm', 'production', 'sales'); SELECT COUNT(*) AS ProductCount FROM production.products; SELECT COUNT(*) AS OrderCount FROM sales.orders; SELECT COUNT(*) AS CandidateCount FROM hr.candidates; SELECT COUNT(*) AS EmployeeCount FROM hr.employees; SELECT COUNT(*) AS ProjectCount FROM pm.projects; SELECT COUNT(*) AS MemberCount FROM pm.members; SELECT COUNT(*) AS CompanyCount FROM dbo.companies; SELECT COUNT(*) AS JsonProductCount FROM dbo.product_json;"
             ],
 
             "options": {
@@ -91,7 +91,7 @@
                 "clear": true
             },
 
-            "detail": "Validates the BikeStores and HR demonstration tables without changing data."
+            "detail": "Validates the BikeStores, HR, project-management, company-name, and JSON demonstration tables without changing data."
         },
 
         {
@@ -108,33 +108,59 @@
                 "BikeStores",
                 "-b",
                 "-i",
-                "${workspaceFolder}/database/queries/ALIAS.sql",
+                "${workspaceFolder}/database/queries/basic/ALIAS.sql",
                 "-i",
-                "${workspaceFolder}/database/queries/AND.sql",
+                "${workspaceFolder}/database/queries/basic/ALL.sql",
                 "-i",
-                "${workspaceFolder}/database/queries/BETWEEN.sql",
+                "${workspaceFolder}/database/queries/basic/AND.sql",
                 "-i",
-                "${workspaceFolder}/database/queries/IN_SUBQUERY.sql",
+                "${workspaceFolder}/database/queries/basic/ANY.sql",
                 "-i",
-                "${workspaceFolder}/database/queries/JOIN.sql",
+                "${workspaceFolder}/database/queries/basic/BETWEEN.sql",
                 "-i",
-                "${workspaceFolder}/database/queries/LIKE.sql",
+                "${workspaceFolder}/database/queries/basic/CROSS_JOIN.sql",
                 "-i",
-                "${workspaceFolder}/database/queries/NULL.sql",
+                "${workspaceFolder}/database/queries/basic/EXISTS.sql",
                 "-i",
-                "${workspaceFolder}/database/queries/OFFSET_FETCH.sql",
+                "${workspaceFolder}/database/queries/basic/FULL_OUTER_JOIN.sql",
                 "-i",
-                "${workspaceFolder}/database/queries/OR.sql",
+                "${workspaceFolder}/database/queries/basic/GROUP_BY.sql",
                 "-i",
-                "${workspaceFolder}/database/queries/ORDER_BY.sql",
+                "${workspaceFolder}/database/queries/basic/HAVING.sql",
                 "-i",
-                "${workspaceFolder}/database/queries/SELECT.sql",
+                "${workspaceFolder}/database/queries/basic/INNER_JOIN.sql",
                 "-i",
-                "${workspaceFolder}/database/queries/SELECT_DISTINCT.sql",
+                "${workspaceFolder}/database/queries/basic/JOIN.sql",
                 "-i",
-                "${workspaceFolder}/database/queries/SELECT_TOP.sql",
+                "${workspaceFolder}/database/queries/basic/LEFT_JOIN.sql",
                 "-i",
-                "${workspaceFolder}/database/queries/WHERE.sql"
+                "${workspaceFolder}/database/queries/basic/LIKE.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/basic/NULL.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/basic/OFFSET_FETCH.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/basic/OR.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/basic/ORDER_BY.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/basic/RIGHT_JOIN.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/basic/SELECT.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/basic/SELECT_DISTINCT.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/basic/SELECT_TOP.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/basic/SUBQUERY.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/basic/WHERE.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/advanced/ADV_CORR_SUBQUERY.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/advanced/ADV_CROSS_APPLY.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/advanced/ADV_SELF_JOIN.sql"
             ],
 
             "options": {
@@ -151,7 +177,7 @@
                 "clear": true
             },
 
-            "detail": "Runs all checked-in portfolio queries against BikeStores."
+            "detail": "Runs every completed portfolio query against BikeStores; ADV_CROSS_APPLY creates or updates a function, and the comment-only ADV_CROSS_JOIN is excluded."
         }
     ],
 

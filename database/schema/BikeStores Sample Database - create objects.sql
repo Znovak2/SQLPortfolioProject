@@ -56,17 +56,22 @@ END;
 GO
 
 ------------------------------------------------------------
--- PRODUCTION TABLES
+-- GENERAL TABLES
 ------------------------------------------------------------
-CREATE TABLE companies(
-   id INT IDENTITY PRIMARY KEY,
-   name VARCHAR(255) NOT NULL
+
+CREATE TABLE companies (
+    id INT IDENTITY PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE product_json(
+CREATE TABLE product_json (
     id INT IDENTITY PRIMARY KEY,
     info NVARCHAR(MAX)
 );
+
+------------------------------------------------------------
+-- PRODUCTION TABLES
+------------------------------------------------------------
 
 CREATE TABLE production.categories (
     category_id INT IDENTITY (1, 1) PRIMARY KEY,
@@ -182,6 +187,10 @@ CREATE TABLE sales.order_items (
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
+
+------------------------------------------------------------
+-- PRODUCTION STOCK TABLES
+------------------------------------------------------------
 
 CREATE TABLE production.stocks (
     store_id INT,

@@ -14,7 +14,11 @@ the listed objects.
 ------------------------------------------------------------
 -- DROP TABLES
 ------------------------------------------------------------
+-- companies
+DROP TABLE IF EXISTS companies;
 
+-- product_json
+DROP TABLE IF EXISTS product_json;
 -- PM
 DROP TABLE IF EXISTS pm.members;
 DROP TABLE IF EXISTS pm.projects;

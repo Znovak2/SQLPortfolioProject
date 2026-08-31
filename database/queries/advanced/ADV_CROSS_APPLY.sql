@@ -1,7 +1,8 @@
 -- The CROSS APPLY clause allows you to perform an inner join a table with a table-valued function or a correlated subquery.
 -- In SQL Server, a table-valued function is a user-defined function that returns multiple rows as a table.
 -- Personally, I feel like this is a solid method to make data analysis more incremental.
-
+    -- It is like an INNER JOIN
+    
 -- CROSS APPLY with a table-valued function:
 -- Q: What are the top two most expensive products by category ID?
 CREATE OR ALTER FUNCTION GetTopProductsByCategory (@category_id INT)
@@ -73,4 +74,3 @@ CROSS APPLY (SELECT REPLACE(c.name,'Corporation', '') name) AS r1
 CROSS APPLY (SELECT REPLACE(r1.name,'Inc.', '') name) AS r2
 CROSS APPLY (SELECT REPLACE(r2.name,'Pte Ltd', '') name) AS r3;
 -- RESULT: The CROSS APPLY version removes the suffixes incrementally, one transformation at a time.
-

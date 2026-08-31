@@ -120,6 +120,8 @@
                 "-i",
                 "${workspaceFolder}/database/queries/basic/CROSS_JOIN.sql",
                 "-i",
+                "${workspaceFolder}/database/queries/basic/EXCEPT.sql",
+                "-i",
                 "${workspaceFolder}/database/queries/basic/EXISTS.sql",
                 "-i",
                 "${workspaceFolder}/database/queries/basic/FULL_OUTER_JOIN.sql",
@@ -129,6 +131,8 @@
                 "${workspaceFolder}/database/queries/basic/HAVING.sql",
                 "-i",
                 "${workspaceFolder}/database/queries/basic/INNER_JOIN.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/basic/INTERSECT.sql",
                 "-i",
                 "${workspaceFolder}/database/queries/basic/JOIN.sql",
                 "-i",
@@ -154,11 +158,17 @@
                 "-i",
                 "${workspaceFolder}/database/queries/basic/SUBQUERY.sql",
                 "-i",
+                "${workspaceFolder}/database/queries/basic/UNION.sql",
+                "-i",
                 "${workspaceFolder}/database/queries/basic/WHERE.sql",
                 "-i",
                 "${workspaceFolder}/database/queries/advanced/ADV_CORR_SUBQUERY.sql",
                 "-i",
                 "${workspaceFolder}/database/queries/advanced/ADV_CROSS_APPLY.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/advanced/ADV_CROSS_JOIN.sql",
+                "-i",
+                "${workspaceFolder}/database/queries/advanced/ADV_OUTER_APPLY.sql",
                 "-i",
                 "${workspaceFolder}/database/queries/advanced/ADV_SELF_JOIN.sql"
             ],
@@ -177,7 +187,7 @@
                 "clear": true
             },
 
-            "detail": "Runs every completed portfolio query against BikeStores; ADV_CROSS_APPLY creates or updates a function, and the comment-only ADV_CROSS_JOIN is excluded."
+            "detail": "Runs all 32 portfolio queries against BikeStores; ADV_CROSS_APPLY and ADV_OUTER_APPLY create or update table-valued functions."
         }
     ],
 

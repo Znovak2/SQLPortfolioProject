@@ -9,9 +9,9 @@ You can review the project in two ways:
 
 ## Project Status
 
-The basic collection currently covers selection, filtering, sorting, pagination, grouping, aggregation, `HAVING`, subqueries, aliases, null handling, joins, and the `ALL`, `ANY`, and `EXISTS` operators. The advanced collection includes completed correlated-subquery, self-join, and `CROSS APPLY` explorations. `ADV_CROSS_JOIN.sql` is a clearly marked placeholder for planned work.
+The basic collection currently covers selection, filtering, sorting, pagination, grouping, aggregation, `HAVING`, subqueries, aliases, null handling, joins, the `ALL`, `ANY`, and `EXISTS` operators, and the `UNION`, `EXCEPT`, and `INTERSECT` set operators. The advanced collection includes completed correlated-subquery, self-join, cross-join, `CROSS APPLY`, and `OUTER APPLY` explorations.
 
-Future showcase work includes completing the advanced cross-join example, common table expressions, window functions, views, stored procedures, additional functions, data validation, indexing, and query-performance techniques.
+Future showcase work includes common table expressions, window functions, views, stored procedures, additional functions, data validation, indexing, and query-performance techniques.
 
 ## Technology
 
@@ -47,7 +47,7 @@ bicycle-shop-analysis/
 ├── database/
 │   ├── queries/
 │   │   ├── basic/       # Focused foundational examples
-│   │   └── advanced/    # More involved examples and planned work
+│   │   └── advanced/    # More involved relational examples
 │   ├── schema/          # Creates schemas, tables, keys, and constraints
 │   ├── seed/            # Loads BikeStores and demonstration data
 │   └── utilities/       # Destructive partial-cleanup script
@@ -65,12 +65,15 @@ The repository can be browsed on GitHub or through [VS Code for the Web](https:/
 - [`GROUP_BY.sql`](./database/queries/basic/GROUP_BY.sql) develops grouped reporting patterns and aggregate calculations.
 - [`SUBQUERY.sql`](./database/queries/basic/SUBQUERY.sql) demonstrates list membership, nested filters, and multiple levels of nesting.
 - [`EXISTS.sql`](./database/queries/basic/EXISTS.sql) contrasts `EXISTS` and `NOT EXISTS`, including null behavior.
+- [`UNION.sql`](./database/queries/basic/UNION.sql), [`EXCEPT.sql`](./database/queries/basic/EXCEPT.sql), and [`INTERSECT.sql`](./database/queries/basic/INTERSECT.sql) demonstrate combining and comparing compatible result sets.
 - [`JOIN.sql`](./database/queries/basic/JOIN.sql) compares inner, outer, and anti-join patterns against deterministic HR data.
 - [`ADV_CORR_SUBQUERY.sql`](./database/queries/advanced/ADV_CORR_SUBQUERY.sql) uses a correlated subquery to find each category's highest-priced products while retaining ties.
+- [`ADV_CROSS_JOIN.sql`](./database/queries/advanced/ADV_CROSS_JOIN.sql) builds a store-product matrix and finds product/store combinations with no sales.
 - [`ADV_CROSS_APPLY.sql`](./database/queries/advanced/ADV_CROSS_APPLY.sql) combines a table-valued function, a correlated subquery, JSON parsing, and incremental string cleanup. It creates or updates `GetTopProductsByCategory` when executed.
+- [`ADV_OUTER_APPLY.sql`](./database/queries/advanced/ADV_OUTER_APPLY.sql) retains products without matching order details while demonstrating a table-valued function and correlated subquery. It creates or updates `GetLatestQuantityDiscount` when executed.
 - [`ADV_SELF_JOIN.sql`](./database/queries/advanced/ADV_SELF_JOIN.sql) uses self joins for reporting hierarchies and comparing customers within a city.
 
-Browse [`database/queries/basic/`](./database/queries/basic/) for the completed concept examples, [`database/queries/advanced/`](./database/queries/advanced/) for advanced or explicitly planned work, and [`Definitions.md`](./Definitions.md) for concise terminology notes. Executing the SQL files is optional and requires a populated `BikeStores` database.
+Browse [`database/queries/basic/`](./database/queries/basic/) for the focused concept examples, [`database/queries/advanced/`](./database/queries/advanced/) for more involved relational patterns, and [`Definitions.md`](./Definitions.md) for concise terminology notes. Executing the SQL files is optional and requires a populated `BikeStores` database.
 
 ## Local Setup
 
@@ -119,7 +122,7 @@ Run these scripts in order against `BikeStores`:
 
 The first script creates the `production`, `sales`, `hr`, and `pm` schemas, 13 schema-qualified tables, and the `companies` and `product_json` helper tables in the executing user's default schema. The second loads the BikeStores sample rows plus deterministic HR, project-management, company-name, and JSON fixtures.
 
-Do not run `database/utilities/BikeStores Sample Database - drop all objects.sql` during normal setup. It destructively removes the 13 tables under the four named project schemas, but it does not currently remove `companies`, `product_json`, or `GetTopProductsByCategory`; it is therefore a partial cleanup rather than a complete reset of the current project.
+Do not run `database/utilities/BikeStores Sample Database - drop all objects.sql` during normal setup. It destructively removes all 15 base tables and the four named project schemas, but it does not remove `GetTopProductsByCategory` or `GetLatestQuantityDiscount`; it is therefore a partial cleanup rather than a complete reset of every project object.
 
 ### 5. Validate the database
 
@@ -153,11 +156,11 @@ On a clean database using `dbo` as the default schema, the expected result is `B
 
 ### 6. Run the query examples
 
-Open a completed file under `database/queries/basic/` or `database/queries/advanced/`, connect it to `BikeStores`, and run individual statements or the complete file. `ADV_CROSS_JOIN.sql` is the only planned file with no executable query yet.
+Open a file under `database/queries/basic/` or `database/queries/advanced/`, connect it to `BikeStores`, and run individual statements or the complete file. All 32 checked-in query files contain executable examples.
 
-In VS Code, the `BikeStores: Validate database` and `Queries: Run portfolio queries` tasks provide the same post-setup validation path for SQL-authenticated connections. They prompt for the server, user, and password; the query task runs every completed example and excludes `ADV_CROSS_JOIN.sql`.
+In VS Code, the `BikeStores: Validate database` and `Queries: Run portfolio queries` tasks provide the same post-setup validation path for SQL-authenticated connections. They prompt for the server, user, and password; the query task runs all 32 examples.
 
-Most query files are read-only demonstrations. `ADV_CROSS_APPLY.sql` is the exception: it creates or alters the `GetTopProductsByCategory` table-valued function before running its result-set examples.
+Most query files are read-only demonstrations. `ADV_CROSS_APPLY.sql` and `ADV_OUTER_APPLY.sql` are the exceptions: they create or alter the `GetTopProductsByCategory` and `GetLatestQuantityDiscount` table-valued functions before running their result-set examples.
 
 ### 7. Build the SQL project
 
@@ -172,7 +175,7 @@ VS Code users can run the equivalent default build task, `SQL Project: Build`.
 ## Safety Notes
 
 - Inspect an existing `BikeStores` database before loading data; the checked-in lifecycle scripts target a clean database.
-- Never run the drop-all-objects utility unless destructive partial cleanup is intentional; it does not remove the current default-schema helper objects.
+- Never run the drop-all-objects utility unless destructive partial cleanup is intentional; it removes all 15 tables and the four named schemas but leaves both query-created functions.
 - Do not commit passwords, secret-bearing connection strings, backups, or generated database files.
 - Pass or verify the `BikeStores` database context before running setup or query scripts.
 - Treat building, loading sample data, publishing a DACPAC, and dropping objects as separate operations.

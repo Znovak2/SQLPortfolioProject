@@ -23,9 +23,9 @@ Setup is complete only when all applicable checks have passed:
 - `pm.projects` contains three rows and `pm.members` contains four rows.
 - `dbo.companies` and `dbo.product_json` contain three rows each.
 - `Bicycle Shop Analysis.sqlproj` builds when a compatible .NET SDK is available.
-- Every completed file under `database/queries/basic/` and `database/queries/advanced/` executes against `BikeStores`.
+- All 32 files under `database/queries/basic/` and `database/queries/advanced/` execute against `BikeStores`.
 
-`database/queries/advanced/ADV_CROSS_JOIN.sql` is planned work and currently contains comments only, so it has no executable validation requirement. `database/queries/advanced/ADV_CROSS_APPLY.sql` is executable and creates or alters `GetTopProductsByCategory` as part of its demonstration.
+`database/queries/advanced/ADV_CROSS_APPLY.sql` and `database/queries/advanced/ADV_OUTER_APPLY.sql` create or alter `GetTopProductsByCategory` and `GetLatestQuantityDiscount`, respectively, as part of their demonstrations. The remaining query files are read-only.
 
 Do not modify analytical SQL or documentation merely to make setup appear successful. Report missing prerequisites and validation failures accurately.
 
@@ -62,7 +62,7 @@ The SQL project and live sample database have different roles. Building the proj
 ## Safety Rules
 
 1. Do not delete an existing database unless the user explicitly requests it.
-2. Do not run the drop-all-objects utility during routine setup. It is destructive and currently performs only a partial cleanup: it does not remove `companies`, `product_json`, or `GetTopProductsByCategory`.
+2. Do not run the drop-all-objects utility during routine setup. It is destructive and currently performs only a partial cleanup: it drops all 15 base tables and the four named schemas but does not remove `GetTopProductsByCategory` or `GetLatestQuantityDiscount`.
 3. Do not load the schema or seed scripts over a partial or populated database.
 4. Do not run destructive Docker commands such as `docker compose down -v`, `docker volume rm`, or broad prune commands.
 5. Do not commit passwords, secret-bearing connection strings, backups, database files, or generated build output.
@@ -91,8 +91,13 @@ test -f "database/utilities/BikeStores Sample Database - drop all objects.sql"
 test -f "database/queries/basic/SELECT.sql"
 test -f "database/queries/basic/SUBQUERY.sql"
 test -f "database/queries/basic/JOIN.sql"
+test -f "database/queries/basic/UNION.sql"
+test -f "database/queries/basic/EXCEPT.sql"
+test -f "database/queries/basic/INTERSECT.sql"
 test -f "database/queries/advanced/ADV_SELF_JOIN.sql"
 test -f "database/queries/advanced/ADV_CROSS_APPLY.sql"
+test -f "database/queries/advanced/ADV_CROSS_JOIN.sql"
+test -f "database/queries/advanced/ADV_OUTER_APPLY.sql"
 ```
 
 Inspect available tools without assuming they are installed:
@@ -337,12 +342,11 @@ If `dotnet` is unavailable, report the missing prerequisite. If the build fails,
 
 ## Phase 7: Validate the Query Files
 
-Execute every completed query only after the database passes Phase 5. On a POSIX shell:
+Execute every query only after the database passes Phase 5. On a POSIX shell:
 
 ```bash
 find database/queries/basic database/queries/advanced \
   -type f -name '*.sql' \
-  ! -name 'ADV_CROSS_JOIN.sql' \
   -print0 |
 while IFS= read -r -d '' query_file; do
   sqlcmd \
@@ -356,9 +360,9 @@ done
 
 For Windows authentication, replace `-U "<user>"` with `-E`. On shells that do not support this loop, run the files individually with the same options. When using Docker, copy both query directories into the container and use the same `sqlcmd` pattern documented in Phase 4.
 
-For SQL-authenticated connections, VS Code provides equivalent `BikeStores: Validate database` and `Queries: Run portfolio queries` tasks. Both prompt for connection values, and the query task explicitly lists every completed query while excluding the comment-only `ADV_CROSS_JOIN.sql`. Use the documented command-line path for Windows authentication.
+For SQL-authenticated connections, VS Code provides equivalent `BikeStores: Validate database` and `Queries: Run portfolio queries` tasks. Both prompt for connection values, and the query task explicitly lists all 32 query files. Use the documented command-line path for Windows authentication.
 
-Most query files are read-only. `ADV_CROSS_APPLY.sql` creates or alters `GetTopProductsByCategory` before running its examples, so validation of every completed file makes that intentional schema change. Its unqualified helper-object references also assume the same default schema used during setup.
+Most query files are read-only. `ADV_CROSS_APPLY.sql` creates or alters `GetTopProductsByCategory`, and `ADV_OUTER_APPLY.sql` creates or alters `GetLatestQuantityDiscount`, so validation of all files makes those two intentional schema changes. Their unqualified function and helper-object references assume the same default schema used during setup.
 
 The purpose is validation. Do not rewrite a query unless the user asks for a query change or a verified defect requires correction.
 
@@ -382,7 +386,7 @@ Member row count:
 Company row count:
 JSON product row count:
 SQL project build status:
-Completed query files execution status:
+All 32 query files execution status:
 Files modified during setup:
 Outstanding issues:
 ```
@@ -398,7 +402,7 @@ docker stop bikestores-sql
 docker start bikestores-sql
 ```
 
-The checked-in utility drops the 13 tables under `hr`, `pm`, `production`, and `sales`, then drops those four schemas. It does not remove the current default-schema `companies` and `product_json` tables or the `GetTopProductsByCategory` function, so it is not a complete reset. It is destructive and should be run only against the intended `BikeStores` database as part of explicitly authorized partial cleanup:
+The checked-in utility drops all 15 base tables, including the default-schema `companies` and `product_json` tables, then drops the `hr`, `pm`, `production`, and `sales` schemas. It does not remove the default-schema `GetTopProductsByCategory` or `GetLatestQuantityDiscount` functions, so it is not a complete reset. It is destructive and should be run only against the intended `BikeStores` database as part of explicitly authorized partial cleanup:
 
 ```bash
 sqlcmd \
